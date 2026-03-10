@@ -23,7 +23,7 @@ export const viewport: Viewport = {
   maximumScale: 1,
   userScalable: false,
   viewportFit: "cover",
-  themeColor: "#0a0a0f",
+  themeColor: "#f5f7fb",
 };
 
 export default function RootLayout({
@@ -74,7 +74,7 @@ export default function RootLayout({
             right: 0,
             zIndex: 40,
             height: "calc(env(safe-area-inset-top) + 28px)",
-            background: "linear-gradient(to bottom, rgba(10,10,15,0.55) 0%, transparent 100%)",
+            background: "linear-gradient(to bottom, rgba(245,247,251,0.82) 0%, transparent 100%)",
             pointerEvents: "none",
           }}
         />
@@ -86,7 +86,7 @@ export default function RootLayout({
             right: 0,
             zIndex: 40,
             height: "calc(env(safe-area-inset-bottom) + 40px)",
-            background: "linear-gradient(to top, rgba(10,10,15,0.55) 0%, transparent 100%)",
+            background: "linear-gradient(to top, rgba(245,247,251,0.82) 0%, transparent 100%)",
             pointerEvents: "none",
           }}
         />

@@ -55,6 +55,31 @@ const STATIONS: MetroStation[] = [
   { code: "MR", name: "Mercado", minutesFromMercado: 0 },
 ];
 
+type StationConnection = {
+  label: string;
+  color: string;
+};
+
+const CONNECTIONS: Record<string, StationConnection> = {
+  AP: { label: "Aeromóvel", color: "#34C759" },
+  MR: { label: "Terminal Hidroviário", color: "#5AC8FA" },
+};
+
+type CitySection = {
+  city: string;
+  codes: string[];
+  labelLines?: string[];
+};
+
+const CITY_SECTIONS: CitySection[] = [
+  { city: "Novo Hamburgo", codes: ["NH", "FN", "IN"] },
+  { city: "São Leopoldo", codes: ["SF", "RS", "SO", "UN"] },
+  { city: "Sapucaia do Sul", codes: ["SC", "LP"], labelLines: ["Sapucaia", "do Sul"] },
+  { city: "Esteio", codes: ["ES"] },
+  { city: "Canoas", codes: ["PB", "SL", "MV", "CN", "FT"] },
+  { city: "Porto Alegre", codes: ["NT", "AN", "AP", "FR", "SP", "RD", "MR"] },
+];
+
 function firstString(value: unknown): string {
   if (typeof value === "string") {
     const trimmed = value.trim();
@@ -131,11 +156,6 @@ export default function Home() {
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [now, setNow] = useState<Date>(new Date());
-
-  const sortedStations = useMemo(
-    () => [...STATIONS].sort((a, b) => b.minutesFromMercado - a.minutesFromMercado),
-    []
-  );
 
   const loadStatus = useCallback(async () => {
     try {
@@ -229,35 +249,35 @@ export default function Home() {
   }, [now, status.currentIntervalMinutes]);
 
   return (
-    <main className="relative min-h-screen overflow-hidden bg-black px-4 py-8 text-white sm:px-8">
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_10%,rgba(48,84,255,0.28),transparent_35%),radial-gradient(circle_at_80%_18%,rgba(0,194,255,0.2),transparent_28%),radial-gradient(circle_at_50%_110%,rgba(170,170,170,0.12),transparent_45%)]" />
+    <main className="relative min-h-screen overflow-hidden bg-transparent px-4 py-8 text-slate-900 sm:px-8">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_10%,rgba(59,130,246,0.2),transparent_35%),radial-gradient(circle_at_80%_18%,rgba(6,182,212,0.16),transparent_28%),radial-gradient(circle_at_50%_110%,rgba(148,163,184,0.2),transparent_45%)]" />
 
       <div className="relative mx-auto flex w-full max-w-4xl flex-col gap-6">
         <section className="glass glass-glare rounded-3xl p-5 backdrop-blur-2xl sm:p-6">
           <div className="mb-4 flex items-center justify-between gap-4">
             <div>
-              <p className="text-xs uppercase tracking-[0.24em] text-white/60">Status operacional</p>
-              <h1 className="text-2xl font-semibold tracking-tight text-white sm:text-3xl">Trem da Hora</h1>
+              <p className="text-xs uppercase tracking-[0.24em] text-slate-600">Status operacional</p>
+              <h1 className="text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">Trem da Hora</h1>
             </div>
-            <span className="rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs text-white/75">
+            <span className="rounded-full border border-slate-300 bg-white/70 px-3 py-1 text-xs text-slate-700">
               {isLoading ? "Atualizando" : "Online"}
             </span>
           </div>
 
           <div className="grid gap-3 sm:grid-cols-3">
-            <article className="card rounded-2xl bg-black/30 p-4">
-              <p className="text-xs uppercase tracking-[0.2em] text-white/55">Situação</p>
-              <p className="mt-2 text-lg font-medium text-white">{status.situation}</p>
+            <article className="card rounded-2xl bg-white/80 p-4">
+              <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Situação</p>
+              <p className="mt-2 text-lg font-medium text-slate-900">{status.situation}</p>
             </article>
 
-            <article className="card rounded-2xl bg-black/30 p-4 sm:col-span-2">
-              <p className="text-xs uppercase tracking-[0.2em] text-white/55">Motivo</p>
-              <p className="mt-2 text-sm leading-relaxed text-white/85">{status.reason}</p>
+            <article className="card rounded-2xl bg-white/80 p-4 sm:col-span-2">
+              <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Motivo</p>
+              <p className="mt-2 text-sm leading-relaxed text-slate-700">{status.reason}</p>
             </article>
 
-            <article className="card rounded-2xl bg-black/30 p-4 sm:col-span-3">
-              <p className="text-xs uppercase tracking-[0.2em] text-white/55">Intervalo atual</p>
-              <p className="mt-2 text-sm text-white/90">
+            <article className="card rounded-2xl bg-white/80 p-4 sm:col-span-3">
+              <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Intervalo atual</p>
+              <p className="mt-2 text-sm text-slate-800">
                 {status.currentIntervalMinutes !== null
                   ? `${status.currentIntervalMinutes} min`
                   : "Sem informação de intervalo"}
@@ -265,64 +285,149 @@ export default function Home() {
             </article>
           </div>
 
-          <p className="mt-4 text-xs text-white/45">
+          <p className="mt-4 text-xs text-slate-500">
             Última atualização:{" "}
             {lastUpdate ? lastUpdate.toLocaleTimeString("pt-BR") : "aguardando primeira leitura"}
           </p>
         </section>
 
-        <section className="glass glass-glare rounded-3xl bg-white/8 p-5 backdrop-blur-2xl sm:p-6">
+        <section className="relative w-full">
           <header className="mb-5">
-            <h2 className="text-xl font-semibold tracking-tight">Linha Trensurb</h2>
-            <p className="mt-1 text-sm text-white/60">Novo Hamburgo → Mercado</p>
+            <h2 className="text-xl font-semibold tracking-tight" style={{ color: "#1C1C1E" }}>
+              Linha 1 – Azul
+            </h2>
+            <p className="mt-0.5 text-sm" style={{ color: "rgba(60,60,67,0.6)" }}>
+              Novo Hamburgo ↔ Mercado
+            </p>
           </header>
 
-          <div className="relative mx-auto max-w-2xl pb-2 pt-1">
-            <div className="pointer-events-none absolute bottom-0 left-1/2 top-0 w-px -translate-x-1/2 bg-gradient-to-b from-cyan-200/50 via-cyan-100/70 to-cyan-200/50" />
+          <div className="relative mx-auto">
+            {/* Linha principal azul Trensurb */}
+            <div
+              className="pointer-events-none absolute bottom-0 left-1/2 top-0 -translate-x-1/2 rounded-full"
+              style={{ width: 6, backgroundColor: "#007AFF", zIndex: 1 }}
+            />
 
-            <div className="pointer-events-none absolute inset-y-0 left-1/2 z-20 w-0 -translate-x-1/2">
+            {/* Marcadores de posição dos trens */}
+            <div
+              className="pointer-events-none absolute inset-y-0 left-1/2 w-0 -translate-x-1/2"
+              style={{ zIndex: 20 }}
+            >
               {trainPositions.map(train => (
-                <span
+                <img
                   key={train.id}
-                  className={`absolute left-1/2 block h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full shadow-[0_0_12px_rgba(255,255,255,0.35)] ${
-                    train.direction === "southbound"
-                      ? "bg-sky-400 ring-2 ring-sky-300/40"
-                      : "bg-orange-400 ring-2 ring-orange-300/40"
-                  }`}
-                  style={{ top: `${train.topPercent}%` }}
-                  aria-hidden="true"
+                  src={train.direction === "southbound" ? "/trem-sul.png" : "/trem-norte.png"}
+                  alt={train.direction === "southbound" ? "Trem sentido sul" : "Trem sentido norte"}
+                  className="absolute left-1/2"
+                  style={{
+                    top: `${train.topPercent}%`,
+                    width: 32,
+                    height: "auto",
+                    transform: "translateX(-50%) translateY(-50%)",
+                    animation: "train-slide 2s ease-in-out infinite",
+                    zIndex: 30,
+                    filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.25))",
+                    transition: "top 9s linear",
+                  }}
                 />
               ))}
             </div>
 
-            {/* TODO: Aplicar animação suave para transição de posição dos trens. */}
+            {CITY_SECTIONS.map((section, sectionIndex) => (
+              <div
+                key={section.city}
+                className="relative"
+                style={{
+                  zIndex: 5,
+                  borderTop: sectionIndex > 0 ? "1px solid rgba(60,60,67,0.1)" : undefined,
+                }}
+              >
+                {/* Label da cidade — vertical, lado esquerdo */}
+                <div
+                  className="pointer-events-none absolute bottom-0 left-0 top-0 flex items-center justify-center"
+                  style={{ width: 24 }}
+                >
+                  <span
+                    style={{
+                      writingMode: "vertical-rl",
+                      transform: "rotate(180deg)",
+                      fontSize: 9,
+                      fontWeight: 700,
+                      letterSpacing: "0.18em",
+                      textTransform: "uppercase",
+                      textAlign: "center",
+                      color: "rgba(60,60,67,0.35)",
+                    }}
+                  >
+                    {section.labelLines
+                      ? section.labelLines.map((line, i, arr) => (
+                          <span key={i}>{line}{i < arr.length - 1 && <br />}</span>
+                        ))
+                      : section.city}
+                  </span>
+                </div>
 
-            <ul className="space-y-3">
-              {sortedStations.map(station => (
-                <li key={station.code} className="grid grid-cols-[1fr_auto_1fr] items-center gap-3">
-                  <div className="text-right">
-                    <p className="text-sm font-medium text-white/90">{station.name}</p>
-                  </div>
+                {/* Estações */}
+                <ul>
+                  {section.codes.map(code => {
+                    const station = STATIONS.find(s => s.code === code)!;
+                    const conn = CONNECTIONS[code];
+                    return (
+                      <li key={code} className="grid grid-cols-[1fr_32px_1fr] items-center">
+                        {/* Nome + conexão */}
+                        <div className="flex flex-col items-end py-3 pl-7 pr-3">
+                          <p className="text-sm font-medium leading-snug" style={{ color: "#1C1C1E" }}>
+                            {station.name}
+                          </p>
+                          {conn && (
+                            <span className="mt-0.5 text-[10px] font-semibold" style={{ color: conn.color }}>
+                              {conn.label}
+                            </span>
+                          )}
+                        </div>
 
-                  <div className="relative flex h-7 w-7 items-center justify-center rounded-full border border-cyan-100/60 bg-cyan-200/20 backdrop-blur-sm">
-                    <span className="h-2 w-2 rounded-full bg-cyan-100" />
-                  </div>
+                        {/* Bolinha da estação */}
+                        <div className="flex items-center justify-center">
+                          <div
+                            className="rounded-full"
+                            style={{
+                              width: 14,
+                              height: 14,
+                              backgroundColor: "#FF3B30",
+                              boxShadow: "0 0 0 2.5px #f5f7fb, 0 0 0 4px rgba(255,59,48,0.22)",
+                              position: "relative",
+                              zIndex: 10,
+                            }}
+                          />
+                        </div>
 
-                  <p className="text-xs text-white/55">{station.minutesFromMercado} min</p>
-                </li>
-              ))}
-            </ul>
+                        {/* Minutos */}
+                        <div className="py-3 pl-3">
+                          <p className="text-xs" style={{ color: "rgba(60,60,67,0.5)" }}>
+                            {station.minutesFromMercado === 0 ? "Terminal" : `${station.minutesFromMercado} min`}
+                          </p>
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            ))}
+          </div>
 
-            <div className="mt-5 flex items-center justify-center gap-5 text-xs text-white/70">
-              <span className="inline-flex items-center gap-2">
-                <span className="h-2.5 w-2.5 rounded-full bg-sky-400" />
-                Sentido Sul
-              </span>
-              <span className="inline-flex items-center gap-2">
-                <span className="h-2.5 w-2.5 rounded-full bg-orange-400" />
-                Sentido Norte
-              </span>
-            </div>
+          {/* Legenda de sentido */}
+          <div
+            className="mt-6 flex items-center justify-center gap-6 text-xs"
+            style={{ color: "rgba(60,60,67,0.6)" }}
+          >
+            <span className="inline-flex items-center gap-2">
+              <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: "#34C759" }} />
+              Sentido Sul
+            </span>
+            <span className="inline-flex items-center gap-2">
+              <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: "#FF9F0A" }} />
+              Sentido Norte
+            </span>
           </div>
         </section>
       </div>
