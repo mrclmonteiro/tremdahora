@@ -542,7 +542,7 @@ export default function Home() {
       {/* Bottom modal fixo, estilo goes-to */}
       <div
         ref={modalRef}
-        className="fixed left-0 right-0 bottom-0 z-50"
+        className="fixed left-0 right-0 bottom-0 z-50 overflow-hidden rounded-t-3xl"
         style={{
           transform: isDragging
             ? `translateY(calc(100% - 56px - ${dragOffset}px))`
@@ -577,7 +577,7 @@ export default function Home() {
         >
           {/* Título: situação + indicador */}
           <div className="mb-5 flex items-center justify-between gap-3">
-            <div className="flex items-center gap-2.5">
+            <div className="flex items-center gap-2.5 min-w-0 flex-1">
               <span style={{ position: "relative", display: "inline-flex", width: 12, height: 12, flexShrink: 0 }}>
                 <span style={{
                   position: "absolute",
@@ -599,15 +599,15 @@ export default function Home() {
                     : "0 0 8px rgba(255,149,0,0.6)",
                 }} />
               </span>
-              <h2 className="text-xl font-semibold tracking-tight text-slate-900">{status.situation}</h2>
+              <h2 className="text-xl font-semibold tracking-tight text-slate-900 leading-tight">{status.situation}</h2>
             </div>
             {status.currentIntervalMinutes !== null && (
-              <div className="flex items-center gap-1.5">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: "rgba(60,60,67,0.45)", flexShrink: 0 }}>
+              <div className="flex items-center gap-1.5 flex-shrink-0 pl-2">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: "rgba(60,60,67,0.45)", flexShrink: 0 }}>
                   <circle cx="12" cy="12" r="10"/>
                   <polyline points="12 6 12 12 16 14"/>
                 </svg>
-                <span className="text-xl font-semibold tracking-tight text-slate-900">
+                <span className="text-xl font-semibold tracking-tight text-slate-900 whitespace-nowrap">
                   {status.currentIntervalMinutes} min
                 </span>
               </div>
@@ -664,6 +664,31 @@ export default function Home() {
           <p className="mt-4 text-[11px] text-slate-400">
             Atualizado às {lastUpdate ? lastUpdate.toLocaleTimeString("pt-BR") : "—"}
           </p>
+
+          {/* Footer — dentro do section pra herdar o backdrop */}
+          <div className="-mx-5 -mb-8 mt-5 px-5 py-5" style={{ background: "rgba(60,60,67,0.06)", borderTop: "1px solid rgba(60,60,67,0.09)" }}>
+          <p className="text-xs leading-relaxed mb-4" style={{ color: "rgba(60,60,67,0.4)" }}>
+            A posição dos trens é estimada com base nos horários oficiais da Trensurb e pode não refletir a localização exata em tempo real. Dados operacionais fornecidos pela própria Trensurb.
+          </p>
+          <p className="text-xs leading-relaxed mb-4" style={{ color: "rgba(60,60,67,0.4)" }}>
+            O <span style={{ color: "rgba(60,60,67,0.65)" }}>Trem da Hora</span> é um app desenvolvido por{" "}
+            <span style={{ color: "rgba(60,60,67,0.65)" }}>Marcelo Monteiro</span> com auxílio da{" "}
+            <span style={{ color: "rgba(60,60,67,0.65)" }}>Claude</span>.
+          </p>
+          <div className="flex gap-4">
+            {[
+              { href: "https://x.com/mrclmonteiro", label: "X", svg: <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.746l7.73-8.835L1.254 2.25H8.08l4.26 5.636zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg> },
+              { href: "https://www.instagram.com/mrclmonteiro/", label: "Instagram", svg: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 11.37A4 4 0 1112.63 8 4 4 0 0116 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg> },
+              { href: "https://github.com/mrclmonteiro/tremdahora", label: "GitHub", svg: <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.477 2 2 6.477 2 12c0 4.42 2.865 8.166 6.839 9.489.5.092.682-.217.682-.482 0-.237-.008-.866-.013-1.7-2.782.603-3.369-1.342-3.369-1.342-.454-1.155-1.11-1.462-1.11-1.462-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.578 9.578 0 0112 6.836c.85.004 1.705.114 2.504.336 1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.202 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.743 0 .267.18.578.688.48C19.138 20.163 22 16.418 22 12c0-5.523-4.477-10-10-10z"/></svg> },
+            ].map(({ href, label, svg }) => (
+              <a key={label} href={href} target="_blank" rel="noopener noreferrer"
+                className="flex items-center justify-center"
+                style={{ color: "rgba(60,60,67,0.35)", lineHeight: 0 }}>
+                {svg}
+              </a>
+            ))}
+          </div>
+          </div>
         </section>
       </div>
     </main>
