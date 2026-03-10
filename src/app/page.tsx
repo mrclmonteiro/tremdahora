@@ -233,7 +233,7 @@ export default function Home() {
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_10%,rgba(48,84,255,0.28),transparent_35%),radial-gradient(circle_at_80%_18%,rgba(0,194,255,0.2),transparent_28%),radial-gradient(circle_at_50%_110%,rgba(170,170,170,0.12),transparent_45%)]" />
 
       <div className="relative mx-auto flex w-full max-w-4xl flex-col gap-6">
-        <section className="rounded-3xl border border-white/15 bg-white/10 p-5 shadow-[0_12px_48px_rgba(0,0,0,0.35)] backdrop-blur-2xl sm:p-6">
+        <section className="glass glass-glare rounded-3xl p-5 backdrop-blur-2xl sm:p-6">
           <div className="mb-4 flex items-center justify-between gap-4">
             <div>
               <p className="text-xs uppercase tracking-[0.24em] text-white/60">Status operacional</p>
@@ -245,17 +245,17 @@ export default function Home() {
           </div>
 
           <div className="grid gap-3 sm:grid-cols-3">
-            <article className="rounded-2xl border border-white/10 bg-black/30 p-4">
+            <article className="card rounded-2xl bg-black/30 p-4">
               <p className="text-xs uppercase tracking-[0.2em] text-white/55">Situação</p>
               <p className="mt-2 text-lg font-medium text-white">{status.situation}</p>
             </article>
 
-            <article className="rounded-2xl border border-white/10 bg-black/30 p-4 sm:col-span-2">
+            <article className="card rounded-2xl bg-black/30 p-4 sm:col-span-2">
               <p className="text-xs uppercase tracking-[0.2em] text-white/55">Motivo</p>
               <p className="mt-2 text-sm leading-relaxed text-white/85">{status.reason}</p>
             </article>
 
-            <article className="rounded-2xl border border-white/10 bg-black/30 p-4 sm:col-span-3">
+            <article className="card rounded-2xl bg-black/30 p-4 sm:col-span-3">
               <p className="text-xs uppercase tracking-[0.2em] text-white/55">Intervalo atual</p>
               <p className="mt-2 text-sm text-white/90">
                 {status.currentIntervalMinutes !== null
@@ -271,7 +271,7 @@ export default function Home() {
           </p>
         </section>
 
-        <section className="rounded-3xl border border-white/15 bg-white/8 p-5 shadow-[0_12px_48px_rgba(0,0,0,0.35)] backdrop-blur-2xl sm:p-6">
+        <section className="glass glass-glare rounded-3xl bg-white/8 p-5 backdrop-blur-2xl sm:p-6">
           <header className="mb-5">
             <h2 className="text-xl font-semibold tracking-tight">Linha Trensurb</h2>
             <p className="mt-1 text-sm text-white/60">Novo Hamburgo → Mercado</p>

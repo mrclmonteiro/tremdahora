@@ -1,13 +1,107 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f7f8f3;
-  --foreground: #1a2b2a;
+  --bg: #0a0a0f;
+  --fg: #ffffff;
+  --accent: #ff453a;
+  --accent-rgb: 255, 69, 58;
+  --bg-rgb: 10, 10, 15;
+  --fg-rgb: 255, 255, 255;
+
+  --glass-bg: rgba(255, 255, 255, 0.06);
+  --glass-border: rgba(255, 255, 255, 0.08);
+
+  --lg-bg: rgba(255, 255, 255, 0.04);
+  --lg-border: transparent;
+  --lg-shadow:
+    0 4px 16px rgba(0, 0, 0, 0.22),
+    inset 1px 1px 0 rgba(255, 255, 255, 0.1),
+    inset -1px -1px 0 rgba(0, 0, 0, 0.2),
+    inset 1px 0 0 rgba(255, 160, 120, 0.06),
+    inset 0 -1px 0 rgba(120, 150, 255, 0.06),
+    inset 10px 10px 20px rgba(255, 255, 255, 0.04),
+    inset -10px -10px 20px rgba(160, 190, 255, 0.02);
+  --lg-glare: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.07) 0%,
+    rgba(255, 255, 255, 0.02) 40%,
+    transparent 62%
+  );
+
+  --glass-shadow:
+    0 4px 24px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.14),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.04),
+    inset 2px 2px 10px rgba(255, 255, 255, 0.04),
+    inset 1px 1px 0 rgba(255, 120, 100, 0.04),
+    inset -1px -1px 0 rgba(100, 130, 255, 0.03);
+
+  --card-bg: rgba(255, 255, 255, 0.05);
+  --card-border: rgba(255, 255, 255, 0.07);
+  --muted: rgba(255, 255, 255, 0.35);
 }
 
+* {
+  box-sizing: border-box;
+}
+
+html,
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: "Work Sans", "Segoe UI", sans-serif;
-  min-height: 100vh;
+  background-color: var(--bg);
+  color: var(--fg);
+  font-family: -apple-system, BlinkMacSystemFont, var(--font-inter), sans-serif;
+  -webkit-font-smoothing: antialiased;
+  overscroll-behavior: none;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+}
+
+::-webkit-scrollbar {
+  display: none;
+}
+
+* {
+  scrollbar-width: none;
+}
+
+.min-h-screen {
+  min-height: 100dvh;
+}
+
+@layer utilities {
+  .glass {
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-shadow);
+  }
+
+  .card {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+  }
+
+  .lg {
+    background: var(--lg-bg);
+    border: 1px solid var(--lg-border);
+    box-shadow: var(--lg-shadow);
+  }
+}
+
+.glass-glare {
+  position: relative;
+  overflow: hidden;
+}
+
+.glass-glare::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: var(--lg-glare);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.lg-gooey {
+  filter: url(#lg-gooey);
 }
