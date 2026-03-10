@@ -96,31 +96,15 @@ function extractStatus(payload: unknown): StatusInfo {
     reason: "Não foi possível obter o status operacional.",
     currentIntervalMinutes: null,
   };
-
   if (!payload || typeof payload !== "object") return fallback;
-
-  const record = payload as Record<string, unknown>;
-  const operacional = record.operacional;
-
-  const situation =
-    firstString((operacional as Record<string, unknown> | undefined)?.situacao) ||
-    firstString((operacional as Record<string, unknown> | undefined)?.status) ||
-    firstString((operacional as Record<string, unknown> | undefined)?.nome) ||
-    fallback.situation;
-
-  const reason =
-    firstString((operacional as Record<string, unknown> | undefined)?.motivo) ||
-    firstString((operacional as Record<string, unknown> | undefined)?.descricao) ||
-    firstString((operacional as Record<string, unknown> | undefined)?.obs) ||
-    "Operação sem observações no momento.";
-
-  const currentIntervalMinutes =
-    firstNumber((operacional as Record<string, unknown> | undefined)?.intervalo) ??
-    firstNumber((operacional as Record<string, unknown> | undefined)?.intervaloAtual) ??
-    firstNumber((operacional as Record<string, unknown> | undefined)?.minutosIntervalo) ??
-    null;
-
-  return { situation, reason, currentIntervalMinutes };
+  const op = (payload as Record<string, unknown>).operacional as Record<string, unknown> | undefined;
+  if (!op) return fallback;
+  return {
+    situation: String(op["descricao-situacao-operacional"] ?? fallback.situation),
+    reason: String(op["motivo"] ?? "Operação sem observações no momento."),
+    currentIntervalMinutes: typeof op["intervalo-entre-trens"] === "number" ? op["intervalo-entre-trens"] : null,
+  };
+}
 }
 
 export default function Home() {
