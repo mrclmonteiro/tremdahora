@@ -105,7 +105,6 @@ function extractStatus(payload: unknown): StatusInfo {
     currentIntervalMinutes: typeof op["intervalo-entre-trens"] === "number" ? op["intervalo-entre-trens"] : null,
   };
 }
-}
 
 export default function Home() {
   const [status, setStatus] = useState<StatusInfo>({
