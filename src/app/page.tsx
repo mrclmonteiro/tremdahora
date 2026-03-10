@@ -14,7 +14,21 @@ type StatusInfo = {
   currentIntervalMinutes: number | null;
 };
 
+type TrainDirection = "southbound" | "northbound";
+
+type TrainPosition = {
+  id: string;
+  direction: TrainDirection;
+  topPercent: number;
+};
+
 const POLL_MS = 30_000;
+const TRAIN_TICK_MS = 10_000;
+const DEFAULT_HEADWAY_MINUTES = 12;
+const SERVICE_START_MINUTES = 5 * 60;
+const ONE_WAY_TRAVEL_MINUTES = 53;
+const TERMINAL_DWELL_MINUTES = 5;
+const CYCLE_MINUTES = 116;
 
 const STATIONS: MetroStation[] = [
   { code: "NH", name: "Novo Hamburgo", minutesFromMercado: 53 },
@@ -96,9 +110,11 @@ function extractStatus(payload: unknown): StatusInfo {
     reason: "Não foi possível obter o status operacional.",
     currentIntervalMinutes: null,
   };
+
   if (!payload || typeof payload !== "object") return fallback;
   const op = (payload as Record<string, unknown>).operacional as Record<string, unknown> | undefined;
   if (!op) return fallback;
+
   return {
     situation: String(op["descricao-situacao-operacional"] ?? fallback.situation),
     reason: String(op["motivo"] ?? "Operação sem observações no momento."),
@@ -114,32 +130,7 @@ export default function Home() {
   });
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [now, setNow] = useState(() => new Date());
-
-  useEffect(() => {
-    const t = setInterval(() => setNow(new Date()), 10_000);
-    return () => clearInterval(t);
-  }, []);
-
-  const trains = useMemo(() => {
-    const headway = status.currentIntervalMinutes ?? 12;
-    const result: { pos: number; southbound: boolean; dep: number }[] = [];
-    const nowMin = now.getHours() * 60 + now.getMinutes() + now.getSeconds() / 60;
-    const start = 5 * 60;
-    if (nowMin < start || nowMin > 23 * 60) return result;
-    for (let dep = start; dep <= nowMin; dep += headway) {
-      const elapsed = nowMin - dep;
-      if (elapsed > 116) continue;
-      let pos: number, southbound: boolean;
-      if (elapsed <= 53) { pos = elapsed / 53; southbound = true; }
-      else if (elapsed <= 58) { pos = 1; southbound = true; }
-      else if (elapsed <= 111) { pos = 1 - (elapsed - 58) / 53; southbound = false; }
-      else { pos = 0; southbound = false; }
-      result.push({ pos, southbound, dep });
-    }
-    console.log('trains:', result.length, 'now:', nowMin, 'headway:', headway);
-    return result;
-  }, [now, status.currentIntervalMinutes]);
+  const [now, setNow] = useState<Date>(new Date());
 
   const sortedStations = useMemo(
     () => [...STATIONS].sort((a, b) => b.minutesFromMercado - a.minutesFromMercado),
@@ -172,6 +163,70 @@ export default function Home() {
     const timer = window.setInterval(loadStatus, POLL_MS);
     return () => window.clearInterval(timer);
   }, [loadStatus]);
+
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      setNow(new Date());
+    }, TRAIN_TICK_MS);
+
+    return () => window.clearInterval(timer);
+  }, []);
+
+  const trainPositions = useMemo<TrainPosition[]>(() => {
+    const headway = Math.max(1, Math.round(status.currentIntervalMinutes ?? DEFAULT_HEADWAY_MINUTES));
+    const minutesNow = now.getHours() * 60 + now.getMinutes() + now.getSeconds() / 60;
+    const elapsedSinceStart = minutesNow - SERVICE_START_MINUTES;
+
+    if (elapsedSinceStart < 0) return [];
+
+    const firstDeparture = Math.floor((elapsedSinceStart - CYCLE_MINUTES) / headway);
+    const lastDeparture = Math.floor(elapsedSinceStart / headway);
+    const positions: TrainPosition[] = [];
+
+    for (let departureIndex = firstDeparture; departureIndex <= lastDeparture; departureIndex += 1) {
+      const elapsed = elapsedSinceStart - departureIndex * headway;
+
+      if (elapsed < 0 || elapsed > CYCLE_MINUTES) continue;
+
+      if (elapsed <= ONE_WAY_TRAVEL_MINUTES) {
+        const progress = elapsed / ONE_WAY_TRAVEL_MINUTES;
+        positions.push({
+          id: `s-${departureIndex}`,
+          direction: "southbound",
+          topPercent: progress * 100,
+        });
+        continue;
+      }
+
+      if (elapsed <= ONE_WAY_TRAVEL_MINUTES + TERMINAL_DWELL_MINUTES) {
+        positions.push({
+          id: `m-${departureIndex}`,
+          direction: "southbound",
+          topPercent: 100,
+        });
+        continue;
+      }
+
+      if (elapsed <= ONE_WAY_TRAVEL_MINUTES + TERMINAL_DWELL_MINUTES + ONE_WAY_TRAVEL_MINUTES) {
+        const progressFromMercado =
+          (elapsed - (ONE_WAY_TRAVEL_MINUTES + TERMINAL_DWELL_MINUTES)) / ONE_WAY_TRAVEL_MINUTES;
+        positions.push({
+          id: `n-${departureIndex}`,
+          direction: "northbound",
+          topPercent: (1 - progressFromMercado) * 100,
+        });
+        continue;
+      }
+
+      positions.push({
+        id: `h-${departureIndex}`,
+        direction: "northbound",
+        topPercent: 0,
+      });
+    }
+
+    return positions;
+  }, [now, status.currentIntervalMinutes]);
 
   return (
     <main className="relative min-h-screen overflow-hidden bg-black px-4 py-8 text-white sm:px-8">
@@ -225,16 +280,22 @@ export default function Home() {
           <div className="relative mx-auto max-w-2xl pb-2 pt-1">
             <div className="pointer-events-none absolute bottom-0 left-1/2 top-0 w-px -translate-x-1/2 bg-gradient-to-b from-cyan-200/50 via-cyan-100/70 to-cyan-200/50" />
 
-            {/* TODO: animação suave futura */}
-            {trains.map((train) => (
-              <div
-                key={train.dep}
-                className="pointer-events-none absolute left-1/2 -translate-x-1/2 -translate-y-1/2 z-10"
-                style={{ top: `${train.pos * 100}%` }}
-              >
-                <div className={`h-4 w-4 rounded-full border-2 border-white/80 shadow-lg ${train.southbound ? "bg-blue-400" : "bg-orange-400"}`} />
-              </div>
-            ))}
+            <div className="pointer-events-none absolute inset-y-0 left-1/2 z-20 w-0 -translate-x-1/2">
+              {trainPositions.map(train => (
+                <span
+                  key={train.id}
+                  className={`absolute left-1/2 block h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full shadow-[0_0_12px_rgba(255,255,255,0.35)] ${
+                    train.direction === "southbound"
+                      ? "bg-sky-400 ring-2 ring-sky-300/40"
+                      : "bg-orange-400 ring-2 ring-orange-300/40"
+                  }`}
+                  style={{ top: `${train.topPercent}%` }}
+                  aria-hidden="true"
+                />
+              ))}
+            </div>
+
+            {/* TODO: Aplicar animação suave para transição de posição dos trens. */}
 
             <ul className="space-y-3">
               {sortedStations.map(station => (
@@ -251,10 +312,20 @@ export default function Home() {
                 </li>
               ))}
             </ul>
+
+            <div className="mt-5 flex items-center justify-center gap-5 text-xs text-white/70">
+              <span className="inline-flex items-center gap-2">
+                <span className="h-2.5 w-2.5 rounded-full bg-sky-400" />
+                Sentido Sul
+              </span>
+              <span className="inline-flex items-center gap-2">
+                <span className="h-2.5 w-2.5 rounded-full bg-orange-400" />
+                Sentido Norte
+              </span>
+            </div>
           </div>
         </section>
       </div>
     </main>
   );
 }
-
