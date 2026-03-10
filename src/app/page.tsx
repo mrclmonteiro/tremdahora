@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 type MetroStation = {
   code: string;
@@ -240,6 +240,134 @@ function getStationTrainTimes(
   };
 }
 
+
+// ── Trem Tour ─────────────────────────────────────────────────────────────────
+const TREM_TOUR_STEPS = [
+  { msg: "Arraste para cima para conferir o status e os intervalos de partidas entre trens", anchor: "modal" as const },
+  { msg: "Escolha entre a visualização dos terminais Mercado e Novo Hamburgo", anchor: "header" as const },
+  { msg: "Toque em uma estação para conferir os próximos horários previstos", anchor: "station" as const },
+]
+type TremTourAnchor = typeof TREM_TOUR_STEPS[number]["anchor"]
+
+function TremTour({
+  step, onAdvance, modalRef, headerRef, stationRef,
+}: {
+  step: number
+  onAdvance: () => void
+  modalRef: React.RefObject<HTMLDivElement | null>
+  headerRef: React.RefObject<HTMLDivElement | null>
+  stationRef: React.RefObject<HTMLLIElement | null>
+}) {
+  const [visible, setVisible] = React.useState(false)
+  const [bubblePos, setBubblePos] = React.useState<{
+    left: number; top?: number; bottom?: number; width: number
+    tailX: number; tailSide: "top" | "bottom"
+  } | null>(null)
+
+  React.useEffect(() => {
+    let raf1 = 0, raf2 = 0
+    let mounted = true
+    setVisible(false)
+    raf1 = requestAnimationFrame(() => {
+      if (!mounted) return
+      const W = window.innerWidth
+      const BW = Math.min(260, W - 32)
+      const anchor: TremTourAnchor = TREM_TOUR_STEPS[step]?.anchor
+      let pos: typeof bubblePos = null
+
+      if (anchor === "modal" && modalRef.current) {
+        const r = modalRef.current.getBoundingClientRect()
+        const bl = Math.max(16, W / 2 - BW / 2)
+        pos = { left: bl, bottom: window.innerHeight - r.top + 12, width: BW, tailX: W / 2 - bl - 8, tailSide: "bottom" }
+      } else if (anchor === "header" && headerRef.current) {
+        const r = headerRef.current.getBoundingClientRect()
+        const bl = Math.max(16, W / 2 - BW / 2)
+        pos = { left: bl, top: r.bottom + 12, width: BW, tailX: W / 2 - bl - 8, tailSide: "top" }
+      } else if (anchor === "station" && stationRef.current) {
+        const r = stationRef.current.getBoundingClientRect()
+        const bl = Math.max(16, W / 2 - BW / 2)
+        pos = { left: bl, top: r.bottom + 10, width: BW, tailX: W / 2 - bl - 8, tailSide: "top" }
+      }
+
+      if (mounted) setBubblePos(pos)
+      raf2 = requestAnimationFrame(() => { if (mounted) setVisible(true) })
+    })
+    return () => { mounted = false; cancelAnimationFrame(raf1); cancelAnimationFrame(raf2) }
+  }, [step]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  if (!bubblePos) return null
+  const isLast = step === TREM_TOUR_STEPS.length - 1
+
+  return (
+    <div
+      style={{
+        position: "fixed", inset: 0, zIndex: 200,
+        background: visible ? "rgba(0,0,0,0.38)" : "rgba(0,0,0,0)",
+        backdropFilter: "blur(2px)",
+        transition: "background 0.25s ease",
+        pointerEvents: visible ? "auto" : "none",
+      }}
+      onClick={onAdvance}
+    >
+      <div
+        onClick={e => e.stopPropagation()}
+        style={{
+          position: "fixed",
+          left: bubblePos.left,
+          top: bubblePos.top,
+          bottom: bubblePos.bottom,
+          width: bubblePos.width,
+          background: "white",
+          borderRadius: 18,
+          padding: "14px 16px 12px",
+          color: "#0a0a0f",
+          fontSize: 14,
+          lineHeight: 1.5,
+          fontWeight: 500,
+          boxShadow: "0 8px 32px rgba(0,0,0,0.22)",
+          opacity: visible ? 1 : 0,
+          transform: visible ? "scale(1) translateY(0)" : "scale(0.9) translateY(6px)",
+          transition: "opacity 0.25s ease, transform 0.35s cubic-bezier(0.34,1.56,0.64,1)",
+          pointerEvents: visible ? "auto" : "none",
+        }}
+      >
+        {/* Tail */}
+        <div style={{
+          position: "absolute", width: 0, height: 0,
+          ...(bubblePos.tailSide === "top"
+            ? { top: -9, borderLeft: "8px solid transparent", borderRight: "8px solid transparent", borderBottom: "10px solid white" }
+            : { bottom: -9, borderLeft: "8px solid transparent", borderRight: "8px solid transparent", borderTop: "10px solid white" }),
+          left: bubblePos.tailX,
+        }} />
+
+        <p style={{ margin: 0, marginBottom: 12 }}>{TREM_TOUR_STEPS[step].msg}</p>
+
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <div style={{ display: "flex", gap: 4 }}>
+            {TREM_TOUR_STEPS.map((_, i) => (
+              <div key={i} style={{
+                height: 5, width: i === step ? 14 : 5, borderRadius: 3,
+                background: i === step ? "#007AFF" : "rgba(0,0,0,0.15)",
+                transition: "width 0.3s ease, background 0.3s ease",
+              }} />
+            ))}
+          </div>
+          <button
+            onClick={onAdvance}
+            style={{
+              background: "#007AFF", color: "white", border: "none", borderRadius: 99,
+              cursor: "pointer", padding: "6px 14px", fontSize: 13, fontWeight: 700,
+              boxShadow: "0 2px 8px rgba(0,122,255,0.4)",
+            }}
+          >
+            {isLast ? "Entendido!" : "Próximo →"}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function Home() {
   const [status, setStatus] = useState<StatusInfo>({
     situation: "Carregando...",
@@ -254,8 +382,15 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(true);
   const [selectedStationCode, setSelectedStationCode] = useState<string | null>(null);
   const [stationModalOpen, setStationModalOpen] = useState(false);
+  const [stationDragOffset, setStationDragOffset] = useState(0);
+  const [stationDragStart, setStationDragStart] = useState<number | null>(null);
+  const stationDragOffsetRef = useRef(0);
+  const stationModalRef = useRef<HTMLDivElement>(null);
   const [distanceFrom, setDistanceFrom] = useState<"mercado" | "nh">("mercado");
   const [headerVisible, setHeaderVisible] = useState(true);
+  const headerRef = useRef<HTMLDivElement>(null);
+  const stationTourRef = useRef<HTMLLIElement>(null);
+  const [tourStep, setTourStep] = useState(-1);
 
 
   useEffect(() => {
@@ -264,6 +399,14 @@ export default function Home() {
     }
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  useEffect(() => {
+    try {
+      if (!localStorage.getItem("trem_tour_done")) {
+        setTimeout(() => setTourStep(0), 900);
+      }
+    } catch (_) {}
   }, []);
 
   const [now, setNow] = useState<Date | null>(null);
@@ -378,11 +521,39 @@ export default function Home() {
 
   function openStationModal(code: string) {
     setSelectedStationCode(code);
-    setStationModalOpen(true);
+    setStationDragOffset(0);
+    stationDragOffsetRef.current = 0;
+    // Monta o componente em translateY(100%) primeiro, aí anima
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => setStationModalOpen(true));
+    });
   }
   function closeStationModal() {
     setStationModalOpen(false);
+    setStationDragOffset(0);
+    stationDragOffsetRef.current = 0;
     setTimeout(() => setSelectedStationCode(null), 400);
+  }
+  function handleStationDragStart(e: React.TouchEvent | React.MouseEvent) {
+    setStationDragStart("touches" in e ? e.touches[0].clientY : (e as React.MouseEvent).clientY);
+    stationDragOffsetRef.current = 0;
+    setStationDragOffset(0);
+  }
+  function handleStationDragMove(e: React.TouchEvent | React.MouseEvent) {
+    if (stationDragStart === null) return;
+    const clientY = "touches" in e ? e.touches[0].clientY : (e as React.MouseEvent).clientY;
+    const offset = Math.max(0, clientY - stationDragStart);
+    stationDragOffsetRef.current = offset;
+    setStationDragOffset(offset);
+  }
+  function handleStationDragEnd() {
+    if (stationDragOffsetRef.current > 100) {
+      closeStationModal();
+    } else {
+      setStationDragOffset(0);
+      stationDragOffsetRef.current = 0;
+    }
+    setStationDragStart(null);
   }
 
   useEffect(() => {
@@ -478,12 +649,26 @@ export default function Home() {
         }}
       >
         <div
+          ref={headerRef}
           className="p-1 flex items-center rounded-full w-full"
-          style={{ background: "rgba(60,60,67,0.10)", cursor: "pointer" }}
+          style={{ background: "rgba(60,60,67,0.10)", cursor: "pointer", position: "relative" }}
           onClick={() => setDistanceFrom(d => d === "mercado" ? "nh" : "mercado")}
         >
-          <span className="flex-1 text-center text-sm py-2 font-semibold rounded-full transition-all" style={{ background: distanceFrom === "mercado" ? "rgba(255,255,255,0.95)" : "transparent", color: distanceFrom === "mercado" ? "#1C1C1E" : "rgba(60,60,67,0.45)", boxShadow: distanceFrom === "mercado" ? "0 1px 6px rgba(0,0,0,0.10)" : "none" }}>↓ Mercado</span>
-          <span className="flex-1 text-center text-sm py-2 font-semibold rounded-full transition-all" style={{ background: distanceFrom === "nh" ? "rgba(255,255,255,0.95)" : "transparent", color: distanceFrom === "nh" ? "#1C1C1E" : "rgba(60,60,67,0.45)", boxShadow: distanceFrom === "nh" ? "0 1px 6px rgba(0,0,0,0.10)" : "none" }}>↑ Novo Hamburgo</span>
+          {/* Indicator deslizante */}
+          <div style={{
+            position: "absolute",
+            top: 4, bottom: 4,
+            left: 4,
+            width: "calc(50% - 4px)",
+            background: "rgba(255,255,255,0.95)",
+            borderRadius: 99,
+            boxShadow: "0 1px 6px rgba(0,0,0,0.10)",
+            transform: distanceFrom === "nh" ? "translateX(100%)" : "translateX(0%)",
+            transition: "transform 0.3s cubic-bezier(0.34, 1.2, 0.64, 1)",
+            pointerEvents: "none",
+          }} />
+          <span className="flex-1 text-center text-sm py-2 font-semibold rounded-full relative z-10 transition-colors duration-200" style={{ color: distanceFrom === "mercado" ? "#1C1C1E" : "rgba(60,60,67,0.45)" }}>↓ Mercado</span>
+          <span className="flex-1 text-center text-sm py-2 font-semibold rounded-full relative z-10 transition-colors duration-200" style={{ color: distanceFrom === "nh" ? "#1C1C1E" : "rgba(60,60,67,0.45)" }}>↑ Novo Hamburgo</span>
         </div>
       </div>
 
@@ -560,7 +745,7 @@ export default function Home() {
                     const station = STATIONS.find(s => s.code === code)!;
                     const conn = CONNECTIONS[code];
                     return (
-                      <li key={code} className="grid grid-cols-[1fr_32px_1fr] items-center">
+                      <li key={code} ref={code === "SC" ? stationTourRef : undefined} className="grid grid-cols-[1fr_32px_1fr] items-center">
                         {/* Nome — clicável */}
                         <div className="flex flex-col items-end py-3 pl-7 pr-3" style={{ pointerEvents: "auto" }}>
                           <button onClick={() => openStationModal(code)} style={{ background: "none", border: "none", padding: 0, cursor: "pointer", textAlign: "right" }}>
@@ -623,7 +808,9 @@ export default function Home() {
                             </div>
                           ) : (
                             <p className="text-xs" style={{ color: "rgba(60,60,67,0.5)" }}>
-                              {station.minutesFromMercado === 0 ? "Terminal" : distanceFrom === "mercado" ? `${station.minutesFromMercado} min` : `${ONE_WAY_TRAVEL_MINUTES - station.minutesFromMercado} min`}
+                              {distanceFrom === "mercado"
+                                ? (station.minutesFromMercado === 0 ? "Terminal" : `${station.minutesFromMercado} min`)
+                                : (station.minutesFromMercado === ONE_WAY_TRAVEL_MINUTES ? "Terminal" : `${ONE_WAY_TRAVEL_MINUTES - station.minutesFromMercado} min`)}
                             </p>
                           )}
                         </div>
@@ -658,7 +845,7 @@ export default function Home() {
       {/* Bottom modal fixo, estilo goes-to */}
       <div
         ref={modalRef}
-        className="fixed left-0 right-0 bottom-0 z-50 overflow-hidden rounded-t-3xl"
+        className="fixed left-0 right-0 bottom-0 z-50 rounded-t-3xl"
         style={{
           transform: isDragging
             ? `translateY(calc(100% - ${dragBaseRef.current + dragOffset}px))`
@@ -671,6 +858,9 @@ export default function Home() {
                   : "translateY(calc(100% - 56px))",
           transition: isDragging ? "none" : "transform 0.45s cubic-bezier(0.32, 0.72, 0, 1)",
           touchAction: "none",
+          willChange: "transform",
+          backfaceVisibility: "hidden",
+          WebkitBackfaceVisibility: "hidden",
         }}
       >
         <div
@@ -685,12 +875,16 @@ export default function Home() {
           <div className="mx-auto flex h-1.5 w-10 rounded-full bg-slate-300/80 shadow-sm" />
         </div>
         <section
-          className="rounded-t-3xl rounded-b-xl px-5 pt-4 pb-8 backdrop-blur-2xl border border-white/40"
+          className="rounded-t-3xl rounded-b-xl px-5 pt-4 pb-8 border border-white/40"
           style={{
+            position: "relative",
             background: "var(--lg-bg)",
             boxShadow: "var(--lg-shadow)",
+            overflow: "hidden",
           }}
         >
+          <div style={{ position: "absolute", inset: 0, borderRadius: "inherit", backdropFilter: "blur(24px) saturate(180%)", WebkitBackdropFilter: "blur(24px) saturate(180%)", pointerEvents: "none", zIndex: 0 }} />
+          <div style={{ position: "relative", zIndex: 1 }}>
           {/* Título: situação + indicador */}
           <div className="mb-5 flex items-center justify-between gap-3">
             <div className="flex items-center gap-2.5 min-w-0 flex-1">
@@ -729,7 +923,7 @@ export default function Home() {
                   <>
                     <div className="flex items-center gap-2">
                       <span className="text-base font-semibold text-slate-900">{status.intervalNHtoMercado} min</span>
-                      <span className="text-[10px] font-bold px-1.5 py-0.5 rounded" style={{ background: "#007AFF", color: "white", letterSpacing: "0.06em" }}>NOVO HAMBURGO</span>
+                      <span className="text-[10px] font-bold px-1.5 py-0.5 rounded" style={{ background: "#FF3B30", color: "white", letterSpacing: "0.06em" }}>NOVO HAMBURGO</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <span className="text-base font-semibold text-slate-900">{status.intervalMercadotoNH} min</span>
@@ -818,6 +1012,7 @@ export default function Home() {
             ))}
           </div>
           </div>
+          </div>
         </section>
       </div>
     </main>
@@ -838,13 +1033,48 @@ export default function Home() {
         return (
           <div className="fixed inset-0 flex flex-col justify-end" style={{ zIndex: 60, pointerEvents: stationModalOpen ? "auto" : "none" }}>
             <div className="absolute inset-0" style={{ background: "rgba(0,0,0,0.28)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)", opacity: stationModalOpen ? 1 : 0, transition: "opacity 0.35s ease" }} onClick={closeStationModal} />
-            <div style={{ position: "relative", background: "#f5f7fb", borderRadius: "28px 28px 0 0", transform: stationModalOpen ? "translateY(0)" : "translateY(100%)", transition: "transform 0.45s cubic-bezier(0.32, 0.72, 0, 1)", maxHeight: "85vh", overflow: "hidden", display: "flex", flexDirection: "column", boxShadow: "0 -8px 48px rgba(0,0,0,0.18)" }}>
-              <div style={{ padding: "12px 0 0", display: "flex", justifyContent: "center", flexShrink: 0 }}>
+            <div
+              ref={stationModalRef}
+              style={{
+                position: "relative",
+                background: "#f5f7fb",
+                borderRadius: "28px 28px 0 0",
+                transform: stationDragStart !== null
+                  ? `translateY(${stationDragOffset}px)`
+                  : stationModalOpen ? "translateY(0)" : "translateY(100%)",
+                transition: stationDragStart !== null ? "none" : "transform 0.45s cubic-bezier(0.32, 0.72, 0, 1)",
+                maxHeight: "85vh",
+                overflow: "hidden",
+                display: "flex",
+                flexDirection: "column",
+                boxShadow: "0 -8px 48px rgba(0,0,0,0.18)",
+              }}>
+              {/* Handle arrastável */}
+              <div
+                onTouchStart={handleStationDragStart}
+                onTouchMove={handleStationDragMove}
+                onTouchEnd={handleStationDragEnd}
+                onMouseDown={handleStationDragStart}
+                onMouseMove={handleStationDragMove}
+                onMouseUp={handleStationDragEnd}
+                style={{ padding: "12px 0 4px", display: "flex", justifyContent: "center", flexShrink: 0, cursor: "grab", touchAction: "none" }}>
                 <div style={{ width: 40, height: 5, borderRadius: 99, background: "rgba(60,60,67,0.18)" }} />
               </div>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 20px 8px", flexShrink: 0 }}>
-                <button onClick={closeStationModal} style={{ width: 36, height: 36, borderRadius: "50%", background: "rgba(60,60,67,0.1)", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M18 6L6 18M6 6L18 18" stroke="#1C1C1E" strokeWidth="2.2" strokeLinecap="round"/></svg>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 20px 8px", flexShrink: 0 }}>
+                <button
+                  onClick={closeStationModal}
+                  style={{
+                    width: 36, height: 36, borderRadius: "50%",
+                    background: "rgba(60,60,67,0.1)", border: "none", cursor: "pointer",
+                    display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+                    transition: "transform 0.09s cubic-bezier(0.33,1,0.68,1), background 0.15s ease",
+                  }}
+                  onMouseDown={e => (e.currentTarget.style.transform = "scale(0.88)")}
+                  onMouseUp={e => (e.currentTarget.style.transform = "scale(1)")}
+                  onTouchStart={e => (e.currentTarget.style.transform = "scale(0.88)")}
+                  onTouchEnd={e => { e.currentTarget.style.transform = "scale(1)"; closeStationModal(); }}
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M18 6L6 18M6 6L18 18" stroke="rgba(60,60,67,0.55)" strokeWidth="2.2" strokeLinecap="round"/></svg>
                 </button>
                 <div style={{ flex: 1, textAlign: "center" }}>
                   <h2 style={{ fontSize: 20, fontWeight: 700, color: "#1C1C1E", margin: 0 }}>{st.name}</h2>
@@ -883,13 +1113,23 @@ export default function Home() {
                 </div>
                 {activeFacilities.length > 0 && (
                   <div>
-                    <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "rgba(60,60,67,0.35)", marginBottom: 10 }}>Facilidades</p>
                     <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-                      {activeFacilities.map(f => (
-                        <div key={f.label} style={{ display: "flex", alignItems: "center", gap: 6, background: "rgba(60,60,67,0.07)", borderRadius: 99, padding: "6px 12px" }}>
-                          <span style={{ fontSize: 12, fontWeight: 500, color: "rgba(60,60,67,0.7)" }}>{f.label}</span>
-                        </div>
-                      ))}
+                      {activeFacilities.map(f => {
+                        const icons: Record<string, React.ReactNode> = {
+                          "Escada rolante": <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 18h4l9-12h5"/><path d="M14 18h7"/><circle cx="5" cy="6" r="2"/></svg>,
+                          "Elevador": <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M9 9l3-3 3 3"/><path d="M9 15l3 3 3-3"/></svg>,
+                          "Biblioteca": <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>,
+                          "Bicicletário": <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="5.5" cy="17.5" r="3.5"/><circle cx="18.5" cy="17.5" r="3.5"/><path d="M15 6a1 1 0 0 0-1-1h-1l-3.5 9h7L15 6z"/><path d="M9.5 14L11 8h4.5"/></svg>,
+                          "Caixa eletrônico": <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>,
+                          "Farmácia": <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M5 12h14"/></svg>,
+                        };
+                        return (
+                          <div key={f.label} style={{ display: "flex", alignItems: "center", gap: 6, background: "rgba(60,60,67,0.07)", borderRadius: 99, padding: "6px 12px", color: "rgba(60,60,67,0.6)" }}>
+                            {icons[f.label]}
+                            <span style={{ fontSize: 12, fontWeight: 500, color: "rgba(60,60,67,0.7)" }}>{f.label}</span>
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 )}
@@ -899,6 +1139,22 @@ export default function Home() {
           </div>
         );
       })()}
+      {tourStep >= 0 && (
+        <TremTour
+          step={tourStep}
+          onAdvance={() => {
+            if (tourStep < TREM_TOUR_STEPS.length - 1) {
+              setTourStep(s => s + 1);
+            } else {
+              setTourStep(-1);
+              try { localStorage.setItem("trem_tour_done", "1"); } catch (_) {}
+            }
+          }}
+          modalRef={modalRef}
+          headerRef={headerRef}
+          stationRef={stationTourRef}
+        />
+      )}
     </>
   );
 }
