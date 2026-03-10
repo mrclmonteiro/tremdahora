@@ -656,6 +656,24 @@ export default function Home() {
           </div>
 
           <div className="flex flex-col gap-4">
+            {/* Intervalo */}
+            {(status.intervalNHtoMercado ?? status.currentIntervalMinutes) !== null && (
+              <div className="flex items-center gap-2">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: "rgba(60,60,67,0.45)", flexShrink: 0 }}>
+                  <circle cx="12" cy="12" r="10"/>
+                  <polyline points="12 6 12 12 16 14"/>
+                </svg>
+                {status.intervalNHtoMercado !== null && status.intervalMercadotoNH !== null && status.intervalNHtoMercado !== status.intervalMercadotoNH ? (
+                  <span className="text-sm text-slate-700">
+                    <span className="font-semibold text-slate-900">{status.intervalNHtoMercado} min</span> ↓ · <span className="font-semibold text-slate-900">{status.intervalMercadotoNH} min</span> ↑
+                  </span>
+                ) : (
+                  <span className="text-sm text-slate-700">
+                    <span className="font-semibold text-slate-900">{status.intervalNHtoMercado ?? status.currentIntervalMinutes} min</span> entre trens
+                  </span>
+                )}
+              </div>
+            )}
             {/* Motivo */}
             <div>
               <p className="text-base font-semibold text-slate-500">Motivo</p>
