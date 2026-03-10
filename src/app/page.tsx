@@ -123,7 +123,7 @@ export default function Home() {
 
   const trains = useMemo(() => {
     const headway = status.currentIntervalMinutes ?? 12;
-    const result = [];
+    const result: { pos: number; southbound: boolean; dep: number }[] = [];
     const nowMin = now.getHours() * 60 + now.getMinutes() + now.getSeconds() / 60;
     const start = 5 * 60;
     if (nowMin < start || nowMin > 23 * 60) return result;
