@@ -106,8 +106,21 @@ body {
   filter: url(#lg-gooey);
 }
 
-@keyframes train-slide {
-  0%   { transform: translateX(-50%) translateY(-50%) translateY(0px); }
-  50%  { transform: translateX(-50%) translateY(-50%) translateY(-3px); }
-  100% { transform: translateX(-50%) translateY(-50%) translateY(0px); }
+@keyframes bounce-modal {
+  0% {
+    transform: translateY(92%);
+  }
+  30% {
+    transform: translateY(80%);
+  }
+  60% {
+    transform: translateY(85%);
+  }
+  100% {
+    transform: translateY(92%);
+  }
+}
+
+.animate-bounce-modal {
+  animation: bounce-modal 1.2s cubic-bezier(0.68, -0.55, 0.27, 1.55);
 }
