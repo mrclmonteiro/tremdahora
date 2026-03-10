@@ -59,12 +59,14 @@ const STATIONS: MetroStation[] = [
 
 type StationConnection = {
   label: string;
+  sublabel?: string;
   color: string;
+  integrated?: boolean;
 };
 
 const CONNECTIONS: Record<string, StationConnection> = {
-  AP: { label: "Aeromóvel", color: "#34C759" },
-  MR: { label: "Terminal Hidroviário", color: "#5AC8FA" },
+  AP: { label: "Aeromóvel", sublabel: "Salgado Filho", color: "#34C759", integrated: true },
+  MR: { label: "Terminal Hidroviário", color: "#5AC8FA", integrated: false },
 };
 
 type CitySection = {
@@ -189,7 +191,9 @@ export default function Home() {
   });
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [distanceFrom, setDistanceFrom] = useState<"mercado" | "nh">("mercado");
   const [headerVisible, setHeaderVisible] = useState(true);
+
 
   useEffect(() => {
     function onScroll() {
@@ -198,6 +202,7 @@ export default function Home() {
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
+
   const [now, setNow] = useState<Date | null>(null);
 
   useEffect(() => { setNow(new Date()); }, []);
@@ -377,40 +382,31 @@ export default function Home() {
       <div
         style={{
           position: "fixed",
-          left: 16,
-          top: "max(env(safe-area-inset-top), 52px)",
+          left: 0,
+          right: 0,
+          top: 0,
           zIndex: 20,
-          pointerEvents: "none",
-          width: "100vw",
+          paddingTop: "max(env(safe-area-inset-top), 48px)",
+          paddingLeft: 16,
+          paddingRight: 16,
+          paddingBottom: 12,
+          background: "rgba(245,247,251,0.75)",
+          backdropFilter: "blur(20px)",
+          WebkitBackdropFilter: "blur(20px)",
           opacity: headerVisible ? 1 : 0,
-          transition: "opacity 0.35s ease",
+          transform: headerVisible ? "translateY(0)" : "translateY(-8px)",
+          transition: "opacity 0.3s ease, transform 0.3s ease",
+          pointerEvents: headerVisible ? "auto" : "none",
         }}
       >
-        <h1
-          className="text-3xl font-bold leading-tight"
-          style={{
-            color: "#1C1C1E",
-            margin: 0,
-            textAlign: "left",
-            lineHeight: 1.15,
-            letterSpacing: "-0.01em",
-            textShadow: "0 1px 12px rgba(255,255,255,0.10)",
-          }}
+        <div
+          className="p-1 flex items-center rounded-full w-full"
+          style={{ background: "rgba(60,60,67,0.10)", cursor: "pointer" }}
+          onClick={() => setDistanceFrom(d => d === "mercado" ? "nh" : "mercado")}
         >
-          Mapa da linha
-        </h1>
-        <p
-          className="text-sm mt-1"
-          style={{
-            color: "rgba(60,60,67,0.45)",
-            margin: 0,
-            textAlign: "left",
-            fontWeight: 500,
-            letterSpacing: "0.01em",
-          }}
-        >
-          Novo Hamburgo ↔ Mercado
-        </p>
+          <span className="flex-1 text-center text-sm py-2 font-semibold rounded-full transition-all" style={{ background: distanceFrom === "mercado" ? "rgba(255,255,255,0.95)" : "transparent", color: distanceFrom === "mercado" ? "#1C1C1E" : "rgba(60,60,67,0.45)", boxShadow: distanceFrom === "mercado" ? "0 1px 6px rgba(0,0,0,0.10)" : "none" }}>↓ Mercado</span>
+          <span className="flex-1 text-center text-sm py-2 font-semibold rounded-full transition-all" style={{ background: distanceFrom === "nh" ? "rgba(255,255,255,0.95)" : "transparent", color: distanceFrom === "nh" ? "#1C1C1E" : "rgba(60,60,67,0.45)", boxShadow: distanceFrom === "nh" ? "0 1px 6px rgba(0,0,0,0.10)" : "none" }}>↑ Novo Hamburgo</span>
+        </div>
       </div>
 
       {/* Mapa da linha ocupa a tela toda */}
@@ -418,7 +414,7 @@ export default function Home() {
         className="relative flex flex-col items-center justify-center select-none pointer-events-none z-0 px-3 pb-32 w-full min-h-[100dvh]"
         style={{
           boxSizing: "border-box",
-          paddingTop: "calc(max(env(safe-area-inset-top), 52px) + 6em)",
+          paddingTop: "calc(max(env(safe-area-inset-top), 48px) + 72px)",
         }}
       >
         {/* --- MAPA DA LINHA --- */}
@@ -492,11 +488,7 @@ export default function Home() {
                           <p className="text-[12px] font-medium leading-snug" style={{ color: "#1C1C1E" }}>
                             {station.name}
                           </p>
-                          {conn && (
-                            <span className="mt-0.5 text-[10px] font-semibold" style={{ color: conn.color }}>
-                              {conn.label}
-                            </span>
-                          )}
+
                         </div>
                         {/* Bolinha da estação */}
                         <div className="flex items-center justify-center">
@@ -514,11 +506,51 @@ export default function Home() {
                             }}
                           />
                         </div>
-                        {/* Minutos */}
+                        {/* Minutos + branch de conexão */}
                         <div className="py-3 pl-3">
-                          <p className="text-xs" style={{ color: "rgba(60,60,67,0.5)" }}>
-                            {station.minutesFromMercado === 0 ? "Terminal" : `${station.minutesFromMercado} min`}
-                          </p>
+                          {conn?.integrated ? (
+                            /* Aeromóvel: branch diagonal saindo da bolinha */
+                            <div className="flex flex-col" style={{ marginLeft: -16 }}>
+                              <div className="flex items-end gap-0">
+                                {/* SVG diagonal */}
+                                <svg width="32" height="28" viewBox="0 0 32 28" fill="none" style={{ flexShrink: 0, overflow: "visible" }}>
+                                  <line x1="0" y1="28" x2="28" y2="4" stroke={conn.color} strokeWidth="3" strokeLinecap="round"/>
+                                  <circle cx="28" cy="4" r="5" fill={conn.color} stroke="white" strokeWidth="2"/>
+                                </svg>
+                                <div className="mb-0.5 flex flex-col" style={{ marginLeft: 4 }}>
+                                  <span className="text-[10px] font-bold leading-tight" style={{ color: conn.color }}>{conn.label}</span>
+                                  {conn.sublabel && <span className="text-[9px] leading-tight" style={{ color: "rgba(60,60,67,0.5)" }}>{conn.sublabel}</span>}
+                                </div>
+                              </div>
+                              <p className="text-xs" style={{ color: "rgba(60,60,67,0.5)" }}>
+                                {distanceFrom === "mercado"
+                                  ? `${station.minutesFromMercado} min`
+                                  : `${ONE_WAY_TRAVEL_MINUTES - station.minutesFromMercado} min`}
+                              </p>
+                            </div>
+                          ) : conn ? (
+                            /* Terminal Hidroviário: badge externo, não integrado */
+                            <div className="flex flex-col gap-0.5">
+                              <p className="text-xs" style={{ color: "rgba(60,60,67,0.5)" }}>Terminal</p>
+                              <span
+                                className="text-[9px] font-semibold leading-tight px-1.5 py-0.5 rounded"
+                                style={{
+                                  color: conn.color,
+                                  border: `1px solid ${conn.color}`,
+                                  display: "inline-block",
+                                  width: "fit-content",
+                                  whiteSpace: "nowrap",
+                                  opacity: 0.8,
+                                }}
+                              >
+                                {conn.label}
+                              </span>
+                            </div>
+                          ) : (
+                            <p className="text-xs" style={{ color: "rgba(60,60,67,0.5)" }}>
+                              {station.minutesFromMercado === 0 ? "Terminal" : distanceFrom === "mercado" ? `${station.minutesFromMercado} min` : `${ONE_WAY_TRAVEL_MINUTES - station.minutesFromMercado} min`}
+                            </p>
+                          )}
                         </div>
                       </li>
                     );
