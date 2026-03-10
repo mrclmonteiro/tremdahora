@@ -12,6 +12,8 @@ type StatusInfo = {
   situation: string;
   reason: string;
   currentIntervalMinutes: number | null;
+  trechos: { estacao1: string; estacao2: string }[];
+  aeromovel: { situation: string; reason: string } | null;
 };
 
 type TrainDirection = "southbound" | "northbound";
@@ -134,17 +136,46 @@ function extractStatus(payload: unknown): StatusInfo {
     situation: "Sem dados",
     reason: "Não foi possível obter o status operacional.",
     currentIntervalMinutes: null,
+    trechos: [],
+    aeromovel: null,
   };
 
   if (!payload || typeof payload !== "object") return fallback;
-  const op = (payload as Record<string, unknown>).operacional as Record<string, unknown> | undefined;
+  const data = payload as Record<string, unknown>;
+  const op = data.operacional as Record<string, unknown> | undefined;
   if (!op) return fallback;
+
+  const aeroRaw = data.aeromovel as Record<string, unknown> | undefined;
+  const aeromovel = aeroRaw ? {
+    situation: String(aeroRaw["descricao-situacao-operacional"] ?? "Sem dados"),
+    reason: String(aeroRaw["motivo"] ?? ""),
+  } : null;
+
+  const trechos = Array.isArray(op["trechos"])
+    ? (op["trechos"] as { estacao1: string; estacao2: string }[])
+    : [];
 
   return {
     situation: String(op["descricao-situacao-operacional"] ?? fallback.situation),
     reason: String(op["motivo"] ?? "Operação sem observações no momento."),
     currentIntervalMinutes: typeof op["intervalo-entre-trens"] === "number" ? op["intervalo-entre-trens"] : null,
+    trechos,
+    aeromovel,
   };
+}
+
+function isStationAffected(code: string, trechos: { estacao1: string; estacao2: string }[] | undefined): boolean {
+  if (!trechos || trechos.length === 0) return false;
+  return trechos.some(({ estacao1, estacao2 }) => {
+    const s1 = STATIONS.find(s => s.name === estacao1);
+    const s2 = STATIONS.find(s => s.name === estacao2);
+    if (!s1 || !s2) return false;
+    const minMin = Math.min(s1.minutesFromMercado, s2.minutesFromMercado);
+    const maxMin = Math.max(s1.minutesFromMercado, s2.minutesFromMercado);
+    const station = STATIONS.find(s => s.code === code);
+    if (!station) return false;
+    return station.minutesFromMercado >= minMin && station.minutesFromMercado <= maxMin;
+  });
 }
 
 export default function Home() {
@@ -152,6 +183,8 @@ export default function Home() {
     situation: "Carregando...",
     reason: "Consultando operação da linha.",
     currentIntervalMinutes: null,
+    trechos: [],
+    aeromovel: null,
   });
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -183,6 +216,8 @@ export default function Home() {
         situation: "Indisponível",
         reason: "Não foi possível atualizar o status operacional agora.",
         currentIntervalMinutes: null,
+        trechos: [],
+        aeromovel: null,
       });
     } finally {
       setIsLoading(false);
@@ -264,12 +299,39 @@ export default function Home() {
   const [modalOpen, setModalOpen] = useState<"hidden" | "open" | "resting">("hidden");
   const [dragStart, setDragStart] = useState<number | null>(null);
   const [dragOffset, setDragOffset] = useState(0);
+  const dragOffsetRef = useRef(0);
 
   useEffect(() => {
     const t1 = setTimeout(() => setModalOpen("open"), 400);
     const t2 = setTimeout(() => setModalOpen("resting"), 1800);
     return () => { clearTimeout(t1); clearTimeout(t2); };
   }, []);
+
+  useEffect(() => {
+    function onMove(e: TouchEvent | MouseEvent) {
+      if (dragStart === null) return;
+      const clientY = "touches" in e ? e.touches[0].clientY : e.clientY;
+      const raw = dragStart - clientY;
+      const maxOffset = modalRef.current ? modalRef.current.offsetHeight - 56 : 999;
+      const offset = Math.min(raw, maxOffset);
+    dragOffsetRef.current = offset;
+    setDragOffset(offset);
+    }
+    function onEnd() {
+      if (dragStart === null) return;
+      handleModalDragEnd();
+    }
+    window.addEventListener("touchmove", onMove, { passive: false });
+    window.addEventListener("touchend", onEnd);
+    window.addEventListener("mousemove", onMove as EventListener);
+    window.addEventListener("mouseup", onEnd);
+    return () => {
+      window.removeEventListener("touchmove", onMove);
+      window.removeEventListener("touchend", onEnd);
+      window.removeEventListener("mousemove", onMove as EventListener);
+      window.removeEventListener("mouseup", onEnd);
+    };
+  }, [dragStart]);
 
   const isDragging = dragStart !== null;
 
@@ -280,11 +342,13 @@ export default function Home() {
   function handleModalDragMove(e: React.TouchEvent | React.MouseEvent) {
     if (dragStart === null) return;
     const clientY = "touches" in e ? e.touches[0].clientY : (e as React.MouseEvent).clientY;
-    setDragOffset(dragStart - clientY);
+    const offset = dragStart - clientY;
+    dragOffsetRef.current = offset;
+    setDragOffset(offset);
   }
   function handleModalDragEnd() {
-    if (dragOffset > 60) setModalOpen("open");
-    else if (dragOffset < -40) setModalOpen("resting");
+    if (dragOffsetRef.current > 60) setModalOpen("open");
+    else if (dragOffsetRef.current < -40) setModalOpen("resting");
     setDragStart(null);
     setDragOffset(0);
   }
@@ -292,7 +356,7 @@ export default function Home() {
   return (
     <main
       suppressHydrationWarning
-      className="relative min-h-[100dvh] w-full overflow-hidden bg-transparent text-slate-900"
+      className="relative min-h-[100dvh] w-full bg-transparent text-slate-900"
       style={{
         paddingTop: "env(safe-area-inset-top)",
         paddingBottom: "env(safe-area-inset-bottom)",
@@ -347,7 +411,7 @@ export default function Home() {
         className="relative flex flex-col items-center justify-center select-none pointer-events-none z-0 px-3 pb-32 w-full min-h-[100dvh]"
         style={{
           boxSizing: "border-box",
-          paddingTop: "calc(max(env(safe-area-inset-top), 52px) + 3.5em)",
+          paddingTop: "calc(max(env(safe-area-inset-top), 52px) + 6em)",
         }}
       >
         {/* --- MAPA DA LINHA --- */}
@@ -432,8 +496,10 @@ export default function Home() {
                             style={{
                               width: 14,
                               height: 14,
-                              backgroundColor: "#FF3B30",
-                              boxShadow: "0 0 0 2.5px #f5f7fb, 0 0 0 4px rgba(255,59,48,0.22)",
+                              backgroundColor: isStationAffected(code, status.trechos) ? "#FF9500" : "#FF3B30",
+                              boxShadow: isStationAffected(code, status.trechos)
+                                ? "0 0 0 2.5px #f5f7fb, 0 0 0 4px rgba(255,149,0,0.35)"
+                                : "0 0 0 2.5px #f5f7fb, 0 0 0 4px rgba(255,59,48,0.22)",
                               position: "relative",
                               zIndex: 10,
                             }}
@@ -479,17 +545,27 @@ export default function Home() {
         className="fixed left-0 right-0 bottom-0 z-50"
         style={{
           transform: isDragging
-            ? `translateY(${-dragOffset}px) translateY(82vh)`
+            ? `translateY(calc(100% - 56px - ${dragOffset}px))`
             : modalOpen === "hidden"
-              ? "translateY(100vh)"
+              ? "translateY(100%)"
               : modalOpen === "open"
-                ? "translateY(55vh)"
-                : "translateY(82vh)",
+                ? "translateY(0%)"
+                : "translateY(calc(100% - 56px))",
           transition: isDragging ? "none" : "transform 0.7s cubic-bezier(0.68, -0.55, 0.27, 1.55)",
           touchAction: "none",
         }}
       >
-        <div className="mx-auto mb-2 mt-2 flex h-1.5 w-10 items-center justify-center rounded-full bg-slate-300/80 shadow-sm" />
+        <div
+          onMouseDown={handleModalDragStart}
+          onTouchStart={handleModalDragStart}
+          onMouseMove={handleModalDragMove}
+          onTouchMove={handleModalDragMove}
+          onMouseUp={handleModalDragEnd}
+          onTouchEnd={handleModalDragEnd}
+          style={{ cursor: "grab", padding: "12px 0" }}
+        >
+          <div className="mx-auto flex h-1.5 w-10 rounded-full bg-slate-300/80 shadow-sm" />
+        </div>
         <section className="rounded-t-3xl rounded-b-xl p-5 pb-8 backdrop-blur-xl border border-slate-200 shadow-[0_8px_32px_0_rgba(60,60,67,0.12)] bg-white/80" style={{ boxShadow: "0 8px 32px 0 rgba(60,60,67,0.12), 0 1.5px 0 0 #e5e7eb" }}>
           {/* --- STATUS, MOTIVO, INTERVALO, ETC --- */}
           <div className="mb-4 flex items-center justify-between gap-4">
@@ -518,6 +594,27 @@ export default function Home() {
                   : "Sem informação de intervalo"}
               </p>
             </article>
+            {status.trechos.length > 0 && (
+              <article className="card rounded-2xl bg-white/80 p-4 sm:col-span-3">
+                <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Trecho afetado</p>
+                {status.trechos.map((t, i) => (
+                  <p key={i} className="mt-2 text-sm font-medium text-slate-800">
+                    <span style={{ color: "#FF9500" }}>●</span> {t.estacao1} → {t.estacao2}
+                  </p>
+                ))}
+              </article>
+            )}
+            {status.aeromovel && (
+              <article className="card rounded-2xl bg-white/80 p-4 sm:col-span-3">
+                <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Aeromóvel</p>
+                <p className="mt-2 text-sm font-medium" style={{ color: status.aeromovel.situation.toLowerCase().includes("normal") ? "#34C759" : "#FF3B30" }}>
+                  {status.aeromovel.situation}
+                </p>
+                {status.aeromovel.reason && (
+                  <p className="mt-1 text-xs text-slate-500">{status.aeromovel.reason}</p>
+                )}
+              </article>
+            )}
           </div>
           <p className="mt-4 text-xs text-slate-500">
             Última atualização: {lastUpdate ? lastUpdate.toLocaleTimeString("pt-BR") : "aguardando primeira leitura"}
