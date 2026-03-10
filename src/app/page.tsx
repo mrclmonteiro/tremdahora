@@ -162,10 +162,16 @@ function extractStatus(payload: unknown): StatusInfo {
     ? (op["trechos"] as { estacao1: string; estacao2: string }[])
     : [];
 
+  const intervalos = Array.isArray(op["intervalos"]) ? op["intervalos"] as {"intervalo": number; "estacao-partida": string}[] : [];
+  const ivNH = intervalos.find(i => i["estacao-partida"] === "Novo Hamburgo")?.intervalo ?? null;
+  const ivMR = intervalos.find(i => i["estacao-partida"] === "Mercado")?.intervalo ?? null;
+
   return {
     situation: String(op["descricao-situacao-operacional"] ?? fallback.situation),
     reason: (() => { const s = String(op["motivo"] ?? "Operação sem observações no momento."); return s.charAt(0).toUpperCase() + s.slice(1); })(),
     currentIntervalMinutes: typeof op["intervalo-entre-trens"] === "number" ? op["intervalo-entre-trens"] : null,
+    intervalNHtoMercado: ivNH,
+    intervalMercadotoNH: ivMR,
     trechos,
     aeromovel,
   };
