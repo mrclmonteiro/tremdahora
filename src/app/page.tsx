@@ -114,6 +114,31 @@ export default function Home() {
   });
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [now, setNow] = useState(() => new Date());
+
+  useEffect(() => {
+    const t = setInterval(() => setNow(new Date()), 10_000);
+    return () => clearInterval(t);
+  }, []);
+
+  const trains = useMemo(() => {
+    const headway = status.currentIntervalMinutes ?? 12;
+    const result = [];
+    const nowMin = now.getHours() * 60 + now.getMinutes() + now.getSeconds() / 60;
+    const start = 5 * 60;
+    if (nowMin < start || nowMin > 23 * 60) return result;
+    for (let dep = start; dep <= nowMin; dep += headway) {
+      const elapsed = nowMin - dep;
+      if (elapsed > 116) continue;
+      let pos: number, southbound: boolean;
+      if (elapsed <= 53) { pos = elapsed / 53; southbound = true; }
+      else if (elapsed <= 58) { pos = 1; southbound = true; }
+      else if (elapsed <= 111) { pos = 1 - (elapsed - 58) / 53; southbound = false; }
+      else { pos = 0; southbound = false; }
+      result.push({ pos, southbound, dep });
+    }
+    return result;
+  }, [now, status.currentIntervalMinutes]);
 
   const sortedStations = useMemo(
     () => [...STATIONS].sort((a, b) => b.minutesFromMercado - a.minutesFromMercado),
@@ -199,7 +224,16 @@ export default function Home() {
           <div className="relative mx-auto max-w-2xl pb-2 pt-1">
             <div className="pointer-events-none absolute bottom-0 left-1/2 top-0 w-px -translate-x-1/2 bg-gradient-to-b from-cyan-200/50 via-cyan-100/70 to-cyan-200/50" />
 
-            {/* TODO: Renderizar os trens em tempo real sobre a linha vertical. */}
+            {/* TODO: animação suave futura */}
+            {trains.map((train) => (
+              <div
+                key={train.dep}
+                className="pointer-events-none absolute left-1/2 -translate-x-1/2 -translate-y-1/2 z-10"
+                style={{ top: `${train.pos * 100}%` }}
+              >
+                <div className={`h-4 w-4 rounded-full border-2 border-white/80 shadow-lg ${train.southbound ? "bg-blue-400" : "bg-orange-400"}`} />
+              </div>
+            ))}
 
             <ul className="space-y-3">
               {sortedStations.map(station => (
