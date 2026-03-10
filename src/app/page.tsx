@@ -148,7 +148,7 @@ function extractStatus(payload: unknown): StatusInfo {
   const aeroRaw = data.aeromovel as Record<string, unknown> | undefined;
   const aeromovel = aeroRaw ? {
     situation: String(aeroRaw["descricao-situacao-operacional"] ?? "Sem dados"),
-    reason: String(aeroRaw["motivo"] ?? ""),
+    reason: (() => { const s = String(aeroRaw["motivo"] ?? ""); return s.charAt(0).toUpperCase() + s.slice(1); })(),
   } : null;
 
   const trechos = Array.isArray(op["trechos"])
@@ -157,7 +157,7 @@ function extractStatus(payload: unknown): StatusInfo {
 
   return {
     situation: String(op["descricao-situacao-operacional"] ?? fallback.situation),
-    reason: String(op["motivo"] ?? "Operação sem observações no momento."),
+    reason: (() => { const s = String(op["motivo"] ?? "Operação sem observações no momento."); return s.charAt(0).toUpperCase() + s.slice(1); })(),
     currentIntervalMinutes: typeof op["intervalo-entre-trens"] === "number" ? op["intervalo-entre-trens"] : null,
     trechos,
     aeromovel,
@@ -296,14 +296,14 @@ export default function Home() {
   }, [now, status.currentIntervalMinutes]);
 
   const modalRef = useRef<HTMLDivElement>(null);
-  const [modalOpen, setModalOpen] = useState<"hidden" | "open" | "resting">("hidden");
+  const [modalOpen, setModalOpen] = useState<"hidden" | "peek" | "open" | "resting">("hidden");
   const [dragStart, setDragStart] = useState<number | null>(null);
   const [dragOffset, setDragOffset] = useState(0);
   const dragOffsetRef = useRef(0);
 
   useEffect(() => {
-    const t1 = setTimeout(() => setModalOpen("open"), 400);
-    const t2 = setTimeout(() => setModalOpen("resting"), 1800);
+    const t1 = setTimeout(() => setModalOpen("peek"), 400);
+    const t2 = setTimeout(() => setModalOpen("resting"), 1600);
     return () => { clearTimeout(t1); clearTimeout(t2); };
   }, []);
 
@@ -550,7 +550,9 @@ export default function Home() {
               ? "translateY(100%)"
               : modalOpen === "open"
                 ? "translateY(0%)"
-                : "translateY(calc(100% - 56px))",
+                : modalOpen === "peek"
+                  ? "translateY(calc(100% - 96px))"
+                  : "translateY(calc(100% - 56px))",
           transition: isDragging ? "none" : "transform 0.7s cubic-bezier(0.68, -0.55, 0.27, 1.55)",
           touchAction: "none",
         }}
@@ -566,58 +568,101 @@ export default function Home() {
         >
           <div className="mx-auto flex h-1.5 w-10 rounded-full bg-slate-300/80 shadow-sm" />
         </div>
-        <section className="rounded-t-3xl rounded-b-xl p-5 pb-8 backdrop-blur-xl border border-slate-200 shadow-[0_8px_32px_0_rgba(60,60,67,0.12)] bg-white/80" style={{ boxShadow: "0 8px 32px 0 rgba(60,60,67,0.12), 0 1.5px 0 0 #e5e7eb" }}>
-          {/* --- STATUS, MOTIVO, INTERVALO, ETC --- */}
-          <div className="mb-4 flex items-center justify-between gap-4">
-            <div>
-              <p className="text-xs uppercase tracking-[0.24em] text-slate-600">Status operacional</p>
-              <h1 className="text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">Trem da Hora</h1>
+        <section
+          className="rounded-t-3xl rounded-b-xl px-5 pt-4 pb-8 backdrop-blur-2xl border border-white/40"
+          style={{
+            background: "var(--lg-bg)",
+            boxShadow: "var(--lg-shadow)",
+          }}
+        >
+          {/* Título: situação + indicador */}
+          <div className="mb-5 flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2.5">
+              <span style={{ position: "relative", display: "inline-flex", width: 12, height: 12, flexShrink: 0 }}>
+                <span style={{
+                  position: "absolute",
+                  inset: 0,
+                  borderRadius: "50%",
+                  backgroundColor: status.situation.toLowerCase().includes("normal") ? "#34C759" : "#FF9500",
+                  opacity: 0.5,
+                  animation: "ping 1.5s cubic-bezier(0,0,0.2,1) infinite",
+                }} />
+                <span style={{
+                  position: "relative",
+                  display: "inline-block",
+                  width: 12,
+                  height: 12,
+                  borderRadius: "50%",
+                  backgroundColor: status.situation.toLowerCase().includes("normal") ? "#34C759" : "#FF9500",
+                  boxShadow: status.situation.toLowerCase().includes("normal")
+                    ? "0 0 8px rgba(52,199,89,0.6)"
+                    : "0 0 8px rgba(255,149,0,0.6)",
+                }} />
+              </span>
+              <h2 className="text-xl font-semibold tracking-tight text-slate-900">{status.situation}</h2>
             </div>
-            <span className="rounded-full border border-slate-300 bg-white/70 px-3 py-1 text-xs text-slate-700">
-              {isLoading ? "Atualizando" : "Online"}
-            </span>
+            {status.currentIntervalMinutes !== null && (
+              <div className="flex items-center gap-1.5">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: "rgba(60,60,67,0.45)", flexShrink: 0 }}>
+                  <circle cx="12" cy="12" r="10"/>
+                  <polyline points="12 6 12 12 16 14"/>
+                </svg>
+                <span className="text-xl font-semibold tracking-tight text-slate-900">
+                  {status.currentIntervalMinutes} min
+                </span>
+              </div>
+            )}
           </div>
-          <div className="grid gap-3 sm:grid-cols-3">
-            <article className="card rounded-2xl bg-white/80 p-4">
-              <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Situação</p>
-              <p className="mt-2 text-lg font-medium text-slate-900">{status.situation}</p>
-            </article>
-            <article className="card rounded-2xl bg-white/80 p-4 sm:col-span-2">
-              <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Motivo</p>
-              <p className="mt-2 text-sm leading-relaxed text-slate-700">{status.reason}</p>
-            </article>
-            <article className="card rounded-2xl bg-white/80 p-4 sm:col-span-3">
-              <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Intervalo atual</p>
-              <p className="mt-2 text-sm text-slate-800">
-                {status.currentIntervalMinutes !== null
-                  ? `${status.currentIntervalMinutes} min`
-                  : "Sem informação de intervalo"}
-              </p>
-            </article>
+
+          <div className="flex flex-col gap-4">
+            {/* Motivo */}
+            <div>
+              <p className="text-base font-semibold text-slate-500">Motivo</p>
+              <p className="mt-0.5 text-sm leading-relaxed text-slate-700">{status.reason}</p>
+            </div>
+
+            {/* Trecho afetado */}
             {status.trechos.length > 0 && (
-              <article className="card rounded-2xl bg-white/80 p-4 sm:col-span-3">
-                <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Trecho afetado</p>
+              <div>
+                <p className="text-base font-semibold text-slate-500">Trecho afetado</p>
                 {status.trechos.map((t, i) => (
-                  <p key={i} className="mt-2 text-sm font-medium text-slate-800">
-                    <span style={{ color: "#FF9500" }}>●</span> {t.estacao1} → {t.estacao2}
+                  <p key={i} className="mt-0.5 text-sm text-slate-700">
+                    <span style={{ color: "#FF9500" }}>● </span>{t.estacao1} → {t.estacao2}
                   </p>
                 ))}
-              </article>
+              </div>
             )}
+
+            {/* Aeromóvel */}
             {status.aeromovel && (
-              <article className="card rounded-2xl bg-white/80 p-4 sm:col-span-3">
-                <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Aeromóvel</p>
-                <p className="mt-2 text-sm font-medium" style={{ color: status.aeromovel.situation.toLowerCase().includes("normal") ? "#34C759" : "#FF3B30" }}>
-                  {status.aeromovel.situation}
-                </p>
+              <div>
+                <h3 className="mb-2 mt-1 text-base font-semibold text-slate-800">Aeromóvel</h3>
+                <div className="flex items-center gap-2">
+                  <span
+                    style={{
+                      display: "inline-block",
+                      width: 8,
+                      height: 8,
+                      borderRadius: "50%",
+                      flexShrink: 0,
+                      backgroundColor: status.aeromovel.situation.toLowerCase().includes("normal") ? "#34C759" : "#FF3B30",
+                      boxShadow: status.aeromovel.situation.toLowerCase().includes("normal")
+                        ? "0 0 0 2px rgba(52,199,89,0.25)"
+                        : "0 0 0 2px rgba(255,59,48,0.25)",
+                    }}
+                  />
+                  <p className="text-base font-semibold text-slate-500">Situação</p>
+                </div>
+                <p className="mt-0.5 text-sm text-slate-700">{status.aeromovel.situation}</p>
                 {status.aeromovel.reason && (
-                  <p className="mt-1 text-xs text-slate-500">{status.aeromovel.reason}</p>
+                  <p className="mt-0.5 text-sm text-slate-700">{status.aeromovel.reason}</p>
                 )}
-              </article>
+              </div>
             )}
           </div>
-          <p className="mt-4 text-xs text-slate-500">
-            Última atualização: {lastUpdate ? lastUpdate.toLocaleTimeString("pt-BR") : "aguardando primeira leitura"}
+
+          <p className="mt-4 text-[11px] text-slate-400">
+            Atualizado às {lastUpdate ? lastUpdate.toLocaleTimeString("pt-BR") : "—"}
           </p>
         </section>
       </div>

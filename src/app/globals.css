@@ -106,6 +106,13 @@ body {
   filter: url(#lg-gooey);
 }
 
+@keyframes ping {
+  75%, 100% {
+    transform: scale(2);
+    opacity: 0;
+  }
+}
+
 @keyframes bounce-modal {
   0% {
     transform: translateY(92%);
