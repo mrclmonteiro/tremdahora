@@ -137,6 +137,7 @@ export default function Home() {
       else { pos = 0; southbound = false; }
       result.push({ pos, southbound, dep });
     }
+    console.log('trains:', result.length, 'now:', nowMin, 'headway:', headway);
     return result;
   }, [now, status.currentIntervalMinutes]);
 
