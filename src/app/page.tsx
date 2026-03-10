@@ -71,13 +71,14 @@ type CitySection = {
   city: string;
   codes: string[];
   labelLines?: string[];
+  paddingY?: number;
 };
 
 const CITY_SECTIONS: CitySection[] = [
   { city: "Novo Hamburgo", codes: ["NH", "FN", "IN"] },
   { city: "São Leopoldo", codes: ["SF", "RS", "SO", "UN"] },
   { city: "Sapucaia do Sul", codes: ["SC", "LP"], labelLines: ["Sapucaia", "do Sul"] },
-  { city: "Esteio", codes: ["ES"] },
+  { city: "Esteio", codes: ["ES"], paddingY: 8 },
   { city: "Canoas", codes: ["PB", "SL", "MV", "CN", "FT"] },
   { city: "Porto Alegre", codes: ["NT", "AN", "AP", "FR", "SP", "RD", "MR"] },
 ];
@@ -300,6 +301,7 @@ export default function Home() {
   const [dragStart, setDragStart] = useState<number | null>(null);
   const [dragOffset, setDragOffset] = useState(0);
   const dragOffsetRef = useRef(0);
+  const dragBaseRef = useRef(0);
 
   useEffect(() => {
     const t1 = setTimeout(() => setModalOpen("peek"), 400);
@@ -336,6 +338,11 @@ export default function Home() {
   const isDragging = dragStart !== null;
 
   function handleModalDragStart(e: React.TouchEvent | React.MouseEvent) {
+    const modalH = modalRef.current?.offsetHeight ?? 0;
+    const windowH = window.innerHeight;
+    // posição atual do topo do modal em px a partir do topo da tela
+    const currentTop = modalOpen === "open" ? windowH - modalH : windowH - 56;
+    dragBaseRef.current = windowH - currentTop; // quanto do modal está visível
     setDragOffset(0);
     setDragStart("touches" in e ? e.touches[0].clientY : (e as React.MouseEvent).clientY);
   }
@@ -445,6 +452,8 @@ export default function Home() {
                 style={{
                   zIndex: 5,
                   borderTop: sectionIndex > 0 ? "1px solid rgba(60,60,67,0.1)" : undefined,
+                  paddingTop: section.paddingY,
+                  paddingBottom: section.paddingY,
                 }}
               >
                 {/* Label da cidade — vertical, lado esquerdo */}
@@ -545,7 +554,7 @@ export default function Home() {
         className="fixed left-0 right-0 bottom-0 z-50 overflow-hidden rounded-t-3xl"
         style={{
           transform: isDragging
-            ? `translateY(calc(100% - 56px - ${dragOffset}px))`
+            ? `translateY(calc(100% - ${dragBaseRef.current + dragOffset}px))`
             : modalOpen === "hidden"
               ? "translateY(100%)"
               : modalOpen === "open"
@@ -553,7 +562,7 @@ export default function Home() {
                 : modalOpen === "peek"
                   ? "translateY(calc(100% - 96px))"
                   : "translateY(calc(100% - 56px))",
-          transition: isDragging ? "none" : "transform 0.7s cubic-bezier(0.68, -0.55, 0.27, 1.55)",
+          transition: isDragging ? "none" : "transform 0.45s cubic-bezier(0.32, 0.72, 0, 1)",
           touchAction: "none",
         }}
       >
