@@ -6,6 +6,19 @@ type MetroStation = {
   code: string;
   name: string;
   minutesFromMercado: number;
+  municipality: string;
+  address: string;
+  lat: number;
+  lng: number;
+  position: "Elevada" | "Superfície";
+  distKmToNext: number | null;
+  distMinToNext: number | null;
+  escadaRolante: boolean;
+  elevador: boolean;
+  biblioteca: boolean;
+  bicicletario: boolean;
+  caixaEletronico: boolean;
+  farmacia: boolean;
 };
 
 type StatusInfo = {
@@ -35,28 +48,28 @@ const TERMINAL_DWELL_MINUTES = 5;
 const CYCLE_MINUTES = 116;
 
 const STATIONS: MetroStation[] = [
-  { code: "NH", name: "Novo Hamburgo", minutesFromMercado: 53 },
-  { code: "FN", name: "Fenac", minutesFromMercado: 50 },
-  { code: "IN", name: "Industrial", minutesFromMercado: 48 },
-  { code: "SF", name: "Santo Afonso", minutesFromMercado: 46 },
-  { code: "RS", name: "Rio dos Sinos", minutesFromMercado: 44 },
-  { code: "SO", name: "São Leopoldo", minutesFromMercado: 41 },
-  { code: "UN", name: "Unisinos", minutesFromMercado: 36 },
-  { code: "SC", name: "Sapucaia", minutesFromMercado: 34 },
-  { code: "LP", name: "Luiz Pasteur", minutesFromMercado: 31 },
-  { code: "ES", name: "Esteio", minutesFromMercado: 28 },
-  { code: "PB", name: "Petrobras", minutesFromMercado: 25 },
-  { code: "SL", name: "São Luís", minutesFromMercado: 23 },
-  { code: "MV", name: "Mathias Velho", minutesFromMercado: 21 },
-  { code: "CN", name: "Canoas", minutesFromMercado: 19 },
-  { code: "FT", name: "Fátima", minutesFromMercado: 16 },
-  { code: "NT", name: "Niterói", minutesFromMercado: 13 },
-  { code: "AN", name: "Anchieta", minutesFromMercado: 11 },
-  { code: "AP", name: "Aeroporto", minutesFromMercado: 10 },
-  { code: "FR", name: "Farrapos", minutesFromMercado: 7 },
-  { code: "SP", name: "São Pedro", minutesFromMercado: 4 },
-  { code: "RD", name: "Rodoviária", minutesFromMercado: 2 },
-  { code: "MR", name: "Mercado", minutesFromMercado: 0 },
+  { code: "NH", name: "Novo Hamburgo", minutesFromMercado: 53, municipality: "Novo Hamburgo", address: "Avenida Nações Unidas, 2050 - Centro - Novo Hamburgo", lat: -29.686667, lng: -51.132778, position: "Elevada", distKmToNext: 1.6, distMinToNext: 3, escadaRolante: true, elevador: true, biblioteca: true, bicicletario: false, caixaEletronico: false, farmacia: false },
+  { code: "FN", name: "Fenac", minutesFromMercado: 50, municipality: "Novo Hamburgo", address: "Av. Nações Unidas, 3790 - Rio Branco - Novo Hamburgo", lat: -29.701111, lng: -51.135, position: "Elevada", distKmToNext: 1.7, distMinToNext: 2, escadaRolante: true, elevador: true, biblioteca: true, bicicletario: true, caixaEletronico: false, farmacia: false },
+  { code: "IN", name: "Industrial", minutesFromMercado: 48, municipality: "Novo Hamburgo", address: "R. Primeiro de Março, 3595 - Centro - Novo Hamburgo", lat: -29.715556, lng: -51.134722, position: "Elevada", distKmToNext: 1.6, distMinToNext: 2, escadaRolante: true, elevador: true, biblioteca: false, bicicletario: false, caixaEletronico: false, farmacia: false },
+  { code: "SF", name: "Santo Afonso", minutesFromMercado: 46, municipality: "Novo Hamburgo", address: "R. Primeiro de Março, 5268 - Santo Afonso - Novo Hamburgo", lat: -29.729722, lng: -51.140278, position: "Elevada", distKmToNext: 2.1, distMinToNext: 2, escadaRolante: true, elevador: true, biblioteca: false, bicicletario: true, caixaEletronico: true, farmacia: false },
+  { code: "RS", name: "Rio dos Sinos", minutesFromMercado: 44, municipality: "São Leopoldo", address: "Av. Mauá, 5100 - Santos Dumont - São Leopoldo", lat: -29.748889, lng: -51.145, position: "Elevada", distKmToNext: 2.4, distMinToNext: 3, escadaRolante: true, elevador: true, biblioteca: false, bicicletario: true, caixaEletronico: true, farmacia: false },
+  { code: "SO", name: "São Leopoldo", minutesFromMercado: 41, municipality: "São Leopoldo", address: "Av. João Corrêa, 669 - Centro - São Leopoldo", lat: -29.768889, lng: -51.141111, position: "Elevada", distKmToNext: 1.9, distMinToNext: 5, escadaRolante: true, elevador: true, biblioteca: true, bicicletario: false, caixaEletronico: true, farmacia: false },
+  { code: "UN", name: "Unisinos", minutesFromMercado: 36, municipality: "São Leopoldo", address: "Av. Mauá, 3503 - Padre Reus - São Leopoldo", lat: -29.786667, lng: -51.140278, position: "Superfície", distKmToNext: 5.1, distMinToNext: 2, escadaRolante: true, elevador: true, biblioteca: false, bicicletario: false, caixaEletronico: false, farmacia: true },
+  { code: "SC", name: "Sapucaia", minutesFromMercado: 34, municipality: "Sapucaia do Sul", address: "Av. Sapucaia, 2073 - Centro - Sapucaia do Sul", lat: -29.823056, lng: -51.148889, position: "Superfície", distKmToNext: 1.9, distMinToNext: 3, escadaRolante: true, elevador: false, biblioteca: false, bicicletario: true, caixaEletronico: false, farmacia: false },
+  { code: "LP", name: "Luiz Pasteur", minutesFromMercado: 31, municipality: "Sapucaia do Sul", address: "Av. Luíz Pasteur, 1399 - Tres Portos - Sapucaia do Sul", lat: -29.8325, lng: -51.165278, position: "Superfície", distKmToNext: 2.6, distMinToNext: 3, escadaRolante: true, elevador: false, biblioteca: false, bicicletario: false, caixaEletronico: false, farmacia: false },
+  { code: "ES", name: "Esteio", minutesFromMercado: 28, municipality: "Esteio", address: "R. Maurício Cardoso, 802 - Centro - Esteio", lat: -29.851944, lng: -51.179444, position: "Superfície", distKmToNext: 2.8, distMinToNext: 3, escadaRolante: true, elevador: true, biblioteca: true, bicicletario: false, caixaEletronico: false, farmacia: false },
+  { code: "PB", name: "Petrobras", minutesFromMercado: 25, municipality: "Canoas", address: "Av. Guilherme Schell, 2425 - Industrial - Canoas", lat: -29.876667, lng: -51.180833, position: "Superfície", distKmToNext: 1.2, distMinToNext: 2, escadaRolante: true, elevador: true, biblioteca: false, bicicletario: false, caixaEletronico: false, farmacia: false },
+  { code: "SL", name: "São Luís", minutesFromMercado: 23, municipality: "Canoas", address: "Av. Getúlio Vargas, 8835 - São José - Canoas", lat: -29.8875, lng: -51.179444, position: "Superfície", distKmToNext: 1.9, distMinToNext: 2, escadaRolante: true, elevador: true, biblioteca: false, bicicletario: false, caixaEletronico: false, farmacia: false },
+  { code: "MV", name: "Mathias Velho", minutesFromMercado: 21, municipality: "Canoas", address: "Av. Guilherme Schell, 7434 - Mathias Velho - Canoas", lat: -29.903889, lng: -51.178889, position: "Superfície", distKmToNext: 1.7, distMinToNext: 2, escadaRolante: true, elevador: true, biblioteca: false, bicicletario: false, caixaEletronico: false, farmacia: false },
+  { code: "CN", name: "Canoas", minutesFromMercado: 19, municipality: "Canoas", address: "R. Tiradentes, 345 - Centro - Canoas", lat: -29.918889, lng: -51.181944, position: "Superfície", distKmToNext: 2.2, distMinToNext: 3, escadaRolante: true, elevador: true, biblioteca: false, bicicletario: false, caixaEletronico: false, farmacia: false },
+  { code: "FT", name: "Fátima", minutesFromMercado: 16, municipality: "Canoas", address: "Av. Guilherme Schell, 3368 - Rio Branco - Canoas", lat: -29.937778, lng: -51.177222, position: "Superfície", distKmToNext: 1.9, distMinToNext: 3, escadaRolante: true, elevador: false, biblioteca: false, bicicletario: false, caixaEletronico: false, farmacia: false },
+  { code: "NT", name: "Niterói", minutesFromMercado: 13, municipality: "Canoas", address: "Av. Guilherme Schell, 1686 - Rio Branco - Canoas", lat: -29.955, lng: -51.176389, position: "Superfície", distKmToNext: 2.5, distMinToNext: 2, escadaRolante: true, elevador: true, biblioteca: false, bicicletario: false, caixaEletronico: false, farmacia: false },
+  { code: "AN", name: "Anchieta", minutesFromMercado: 11, municipality: "Porto Alegre", address: "Av. dos Estados, 215 - Humaitá - Porto Alegre", lat: -29.976667, lng: -51.178611, position: "Superfície", distKmToNext: 1.2, distMinToNext: 1, escadaRolante: true, elevador: false, biblioteca: false, bicicletario: false, caixaEletronico: false, farmacia: false },
+  { code: "AP", name: "Aeroporto", minutesFromMercado: 10, municipality: "Porto Alegre", address: "Av. dos Estados, 1380 - São João - Porto Alegre", lat: -29.987778, lng: -51.182222, position: "Superfície", distKmToNext: 1.9, distMinToNext: 3, escadaRolante: true, elevador: false, biblioteca: false, bicicletario: false, caixaEletronico: false, farmacia: false },
+  { code: "FR", name: "Farrapos", minutesFromMercado: 7, municipality: "Porto Alegre", address: "Av. A. J. Renner, 25 - Humaitá - Porto Alegre", lat: -29.997222, lng: -51.1975, position: "Superfície", distKmToNext: 1.8, distMinToNext: 3, escadaRolante: true, elevador: false, biblioteca: false, bicicletario: false, caixaEletronico: true, farmacia: false },
+  { code: "SP", name: "São Pedro", minutesFromMercado: 4, municipality: "Porto Alegre", address: "R. Voluntários da Pátria, 3100 - São Geraldo - Porto Alegre", lat: -30.006111, lng: -51.209167, position: "Superfície", distKmToNext: 2.1, distMinToNext: 2, escadaRolante: true, elevador: true, biblioteca: false, bicicletario: false, caixaEletronico: true, farmacia: false },
+  { code: "RD", name: "Rodoviária", minutesFromMercado: 2, municipality: "Porto Alegre", address: "Largo Vespasiano Júlio Veppo, 70 - Centro Histórico - Porto Alegre", lat: -30.0225, lng: -51.219722, position: "Superfície", distKmToNext: 0.9, distMinToNext: 2, escadaRolante: true, elevador: true, biblioteca: false, bicicletario: false, caixaEletronico: true, farmacia: false },
+  { code: "MR", name: "Mercado", minutesFromMercado: 0, municipality: "Porto Alegre", address: "Av. Mauá, 1267 - Centro Histórico - Porto Alegre", lat: -30.026389, lng: -51.228056, position: "Superfície", distKmToNext: null, distMinToNext: null, escadaRolante: true, elevador: true, biblioteca: true, bicicletario: true, caixaEletronico: true, farmacia: false },
 ];
 
 type StationConnection = {
@@ -191,6 +204,42 @@ function isStationAffected(code: string, trechos: { estacao1: string; estacao2: 
   });
 }
 
+function minutesToHHMM(m: number): string {
+  const h = Math.floor(m / 60) % 24;
+  const min = Math.floor(m % 60);
+  return `${String(h).padStart(2, "0")}:${String(min).padStart(2, "0")}`;
+}
+
+function getStationTrainTimes(
+  minutesFromMercado: number,
+  now: Date | null,
+  headwaySouth: number,
+  headwayNorth: number
+): {
+  southbound: { last: string | null; next1: string | null; next2: string | null };
+  northbound: { last: string | null; next1: string | null; next2: string | null };
+} {
+  const empty = { last: null, next1: null, next2: null };
+  if (!now) return { southbound: empty, northbound: empty };
+  const minutesNow = now.getHours() * 60 + now.getMinutes() + now.getSeconds() / 60;
+  function timesForDir(baseOffset: number, hw: number) {
+    const base = SERVICE_START_MINUTES + baseOffset;
+    const n = Math.floor((minutesNow - base) / hw);
+    const candidates = [n - 1, n, n + 1, n + 2].map(i => base + i * hw).filter(t => t >= SERVICE_START_MINUTES && t < 23 * 60 + 30);
+    const past = candidates.filter(t => t <= minutesNow);
+    const future = candidates.filter(t => t > minutesNow);
+    return {
+      last: past.length > 0 ? minutesToHHMM(past[past.length - 1]) : null,
+      next1: future.length > 0 ? minutesToHHMM(future[0]) : null,
+      next2: future.length > 1 ? minutesToHHMM(future[1]) : null,
+    };
+  }
+  return {
+    southbound: timesForDir(ONE_WAY_TRAVEL_MINUTES - minutesFromMercado, headwaySouth),
+    northbound: timesForDir(minutesFromMercado, headwayNorth),
+  };
+}
+
 export default function Home() {
   const [status, setStatus] = useState<StatusInfo>({
     situation: "Carregando...",
@@ -203,6 +252,8 @@ export default function Home() {
   });
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedStationCode, setSelectedStationCode] = useState<string | null>(null);
+  const [stationModalOpen, setStationModalOpen] = useState(false);
   const [distanceFrom, setDistanceFrom] = useState<"mercado" | "nh">("mercado");
   const [headerVisible, setHeaderVisible] = useState(true);
 
@@ -258,9 +309,10 @@ export default function Home() {
     return () => window.clearInterval(timer);
   }, []);
 
+  const headwaySouth = Math.max(1, Math.round(status.intervalNHtoMercado ?? status.currentIntervalMinutes ?? DEFAULT_HEADWAY_MINUTES));
+  const headwayNorth = Math.max(1, Math.round(status.intervalMercadotoNH ?? status.currentIntervalMinutes ?? DEFAULT_HEADWAY_MINUTES));
+
   const trainPositions = useMemo<TrainPosition[]>(() => {
-    const headwaySouth = Math.max(1, Math.round(status.intervalNHtoMercado ?? status.currentIntervalMinutes ?? DEFAULT_HEADWAY_MINUTES));
-    const headwayNorth = Math.max(1, Math.round(status.intervalMercadotoNH ?? status.currentIntervalMinutes ?? DEFAULT_HEADWAY_MINUTES));
     const headway = Math.round((headwaySouth + headwayNorth) / 2);
     if (!now) return [];
     const minutesNow = now.getHours() * 60 + now.getMinutes() + now.getSeconds() / 60;
@@ -324,6 +376,15 @@ export default function Home() {
   const dragOffsetRef = useRef(0);
   const dragBaseRef = useRef(0);
 
+  function openStationModal(code: string) {
+    setSelectedStationCode(code);
+    setStationModalOpen(true);
+  }
+  function closeStationModal() {
+    setStationModalOpen(false);
+    setTimeout(() => setSelectedStationCode(null), 400);
+  }
+
   useEffect(() => {
     const t1 = setTimeout(() => setModalOpen("peek"), 400);
     const t2 = setTimeout(() => setModalOpen("resting"), 1600);
@@ -382,6 +443,7 @@ export default function Home() {
   }
 
   return (
+    <>
     <main
       suppressHydrationWarning
       className="relative min-h-[100dvh] w-full bg-transparent text-slate-900"
@@ -499,12 +561,11 @@ export default function Home() {
                     const conn = CONNECTIONS[code];
                     return (
                       <li key={code} className="grid grid-cols-[1fr_32px_1fr] items-center">
-                        {/* Nome + conexão */}
-                        <div className="flex flex-col items-end py-3 pl-7 pr-3">
-                          <p className="text-[12px] font-medium leading-snug" style={{ color: "#1C1C1E" }}>
-                            {station.name}
-                          </p>
-
+                        {/* Nome — clicável */}
+                        <div className="flex flex-col items-end py-3 pl-7 pr-3" style={{ pointerEvents: "auto" }}>
+                          <button onClick={() => openStationModal(code)} style={{ background: "none", border: "none", padding: 0, cursor: "pointer", textAlign: "right" }}>
+                            <p className="text-[12px] font-medium leading-snug" style={{ color: "#1C1C1E" }}>{station.name}</p>
+                          </button>
                         </div>
                         {/* Bolinha da estação */}
                         <div className="flex items-center justify-center">
@@ -525,17 +586,15 @@ export default function Home() {
                         {/* Minutos + branch de conexão */}
                         <div className="py-3 pl-3">
                           {conn?.integrated ? (
-                            /* Aeromóvel: branch diagonal saindo da bolinha */
-                            <div className="flex flex-col" style={{ marginLeft: -16 }}>
-                              <div className="flex items-end gap-0">
-                                {/* SVG diagonal */}
-                                <svg width="32" height="28" viewBox="0 0 32 28" fill="none" style={{ flexShrink: 0, overflow: "visible" }}>
-                                  <line x1="0" y1="28" x2="28" y2="4" stroke={conn.color} strokeWidth="3" strokeLinecap="round"/>
-                                  <circle cx="28" cy="4" r="5" fill={conn.color} stroke="white" strokeWidth="2"/>
+                            <div style={{ position: "relative" }}>
+                              <div style={{ position: "absolute", bottom: "50%", left: -16, pointerEvents: "none" }}>
+                                <svg width="42" height="36" viewBox="0 0 42 36" fill="none" style={{ display: "block", overflow: "visible" }}>
+                                  <line x1="0" y1="36" x2="36" y2="4" stroke={conn.color} strokeWidth="3" strokeLinecap="round"/>
+                                  <circle cx="36" cy="4" r="5" fill={conn.color} stroke="white" strokeWidth="2"/>
                                 </svg>
-                                <div className="mb-0.5 flex flex-col" style={{ marginLeft: 4 }}>
-                                  <span className="text-[10px] font-bold leading-tight" style={{ color: conn.color }}>{conn.label}</span>
-                                  {conn.sublabel && <span className="text-[9px] leading-tight" style={{ color: "rgba(60,60,67,0.5)" }}>{conn.sublabel}</span>}
+                                <div style={{ position: "absolute", top: 0, left: 42, transform: "translateY(-50%)", whiteSpace: "nowrap" }}>
+                                  <div className="text-[10px] font-bold leading-tight" style={{ color: conn.color }}>{conn.label}</div>
+                                  {conn.sublabel && <div className="text-[9px] leading-tight" style={{ color: "rgba(60,60,67,0.5)" }}>{conn.sublabel}</div>}
                                 </div>
                               </div>
                               <p className="text-xs" style={{ color: "rgba(60,60,67,0.5)" }}>
@@ -762,5 +821,84 @@ export default function Home() {
         </section>
       </div>
     </main>
+
+      {selectedStationCode && (() => {
+        const st = STATIONS.find(s => s.code === selectedStationCode)!;
+        const conn = CONNECTIONS[selectedStationCode];
+        const times = getStationTrainTimes(st.minutesFromMercado, now, headwaySouth, headwayNorth);
+        const facilities: { label: string; active: boolean }[] = [
+          { label: "Escada rolante", active: st.escadaRolante },
+          { label: "Elevador", active: st.elevador },
+          { label: "Biblioteca", active: st.biblioteca },
+          { label: "Bicicletário", active: st.bicicletario },
+          { label: "Caixa eletrônico", active: st.caixaEletronico },
+          { label: "Farmácia", active: st.farmacia },
+        ];
+        const activeFacilities = facilities.filter(f => f.active);
+        return (
+          <div className="fixed inset-0 flex flex-col justify-end" style={{ zIndex: 60, pointerEvents: stationModalOpen ? "auto" : "none" }}>
+            <div className="absolute inset-0" style={{ background: "rgba(0,0,0,0.28)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)", opacity: stationModalOpen ? 1 : 0, transition: "opacity 0.35s ease" }} onClick={closeStationModal} />
+            <div style={{ position: "relative", background: "#f5f7fb", borderRadius: "28px 28px 0 0", transform: stationModalOpen ? "translateY(0)" : "translateY(100%)", transition: "transform 0.45s cubic-bezier(0.32, 0.72, 0, 1)", maxHeight: "85vh", overflow: "hidden", display: "flex", flexDirection: "column", boxShadow: "0 -8px 48px rgba(0,0,0,0.18)" }}>
+              <div style={{ padding: "12px 0 0", display: "flex", justifyContent: "center", flexShrink: 0 }}>
+                <div style={{ width: 40, height: 5, borderRadius: 99, background: "rgba(60,60,67,0.18)" }} />
+              </div>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 20px 8px", flexShrink: 0 }}>
+                <button onClick={closeStationModal} style={{ width: 36, height: 36, borderRadius: "50%", background: "rgba(60,60,67,0.1)", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M18 6L6 18M6 6L18 18" stroke="#1C1C1E" strokeWidth="2.2" strokeLinecap="round"/></svg>
+                </button>
+                <div style={{ flex: 1, textAlign: "center" }}>
+                  <h2 style={{ fontSize: 20, fontWeight: 700, color: "#1C1C1E", margin: 0 }}>{st.name}</h2>
+                  <p style={{ fontSize: 11, color: "rgba(60,60,67,0.45)", margin: "2px 0 0", fontWeight: 500 }}>{st.municipality} · {st.position}</p>
+                </div>
+                <div style={{ width: 36, flexShrink: 0 }} />
+              </div>
+              <div style={{ overflowY: "auto", flex: 1, padding: "8px 20px 40px" }}>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 20 }}>
+                  {([
+                    { dir: "northbound" as const, label: "Novo Hamburgo", color: "#FF3B30" },
+                    { dir: "southbound" as const, label: "Mercado", color: "#007AFF" },
+                  ] as const).map(({ dir, label, color }) => {
+                    const t = times[dir];
+                    return (
+                      <div key={dir} style={{ background: "rgba(60,60,67,0.06)", borderRadius: 16, padding: "14px 14px 12px" }}>
+                        <span style={{ display: "inline-block", fontSize: 9, fontWeight: 800, letterSpacing: "0.08em", textTransform: "uppercase", color: "white", background: color, borderRadius: 6, padding: "2px 6px", marginBottom: 10 }}>{label}</span>
+                        {t.last && <div style={{ marginBottom: 6 }}><p style={{ fontSize: 9, color: "rgba(60,60,67,0.4)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 1 }}>Último</p><p style={{ fontSize: 18, fontWeight: 700, color: "rgba(60,60,67,0.4)", lineHeight: 1 }}>{t.last}</p></div>}
+                        {t.next1 && <div style={{ marginBottom: 4 }}><p style={{ fontSize: 9, color: "rgba(60,60,67,0.45)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 1 }}>Próximo</p><p style={{ fontSize: 22, fontWeight: 700, color: "#1C1C1E", lineHeight: 1 }}>{t.next1}</p></div>}
+                        {t.next2 && <div><p style={{ fontSize: 9, color: "rgba(60,60,67,0.45)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 1 }}>Seguinte</p><p style={{ fontSize: 16, fontWeight: 600, color: "rgba(60,60,67,0.55)", lineHeight: 1 }}>{t.next2}</p></div>}
+                        {!t.next1 && <p style={{ fontSize: 12, color: "rgba(60,60,67,0.3)" }}>Sem previsão</p>}
+                      </div>
+                    );
+                  })}
+                </div>
+                {conn && (
+                  <div style={{ marginBottom: 16, padding: "10px 14px", borderRadius: 12, border: `1px solid ${conn.color}40`, background: `${conn.color}10`, display: "flex", alignItems: "center", gap: 8 }}>
+                    <div style={{ width: 8, height: 8, borderRadius: "50%", background: conn.color, flexShrink: 0 }} />
+                    <span style={{ fontSize: 13, fontWeight: 600, color: conn.color }}>{conn.label}</span>
+                    {conn.sublabel && <span style={{ fontSize: 12, color: "rgba(60,60,67,0.5)" }}>· {conn.sublabel}</span>}
+                  </div>
+                )}
+                <div style={{ marginBottom: 16, display: "flex", alignItems: "flex-start", gap: 10 }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(60,60,67,0.4)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: 1 }}><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                  <p style={{ fontSize: 13, color: "rgba(60,60,67,0.6)", lineHeight: 1.4 }}>{st.address}</p>
+                </div>
+                {activeFacilities.length > 0 && (
+                  <div>
+                    <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "rgba(60,60,67,0.35)", marginBottom: 10 }}>Facilidades</p>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                      {activeFacilities.map(f => (
+                        <div key={f.label} style={{ display: "flex", alignItems: "center", gap: 6, background: "rgba(60,60,67,0.07)", borderRadius: 99, padding: "6px 12px" }}>
+                          <span style={{ fontSize: 12, fontWeight: 500, color: "rgba(60,60,67,0.7)" }}>{f.label}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                <p style={{ fontSize: 10, color: "rgba(60,60,67,0.3)", marginTop: 20, lineHeight: 1.4 }}>Horários estimados com base no intervalo atual de {headwaySouth} min (↓) e {headwayNorth} min (↑).</p>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+    </>
   );
 }
