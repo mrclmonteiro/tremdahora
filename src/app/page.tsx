@@ -259,7 +259,9 @@ export default function Home() {
   }, []);
 
   const trainPositions = useMemo<TrainPosition[]>(() => {
-    const headway = Math.max(1, Math.round(status.currentIntervalMinutes ?? DEFAULT_HEADWAY_MINUTES));
+    const headwaySouth = Math.max(1, Math.round(status.intervalNHtoMercado ?? status.currentIntervalMinutes ?? DEFAULT_HEADWAY_MINUTES));
+    const headwayNorth = Math.max(1, Math.round(status.intervalMercadotoNH ?? status.currentIntervalMinutes ?? DEFAULT_HEADWAY_MINUTES));
+    const headway = Math.round((headwaySouth + headwayNorth) / 2);
     if (!now) return [];
     const minutesNow = now.getHours() * 60 + now.getMinutes() + now.getSeconds() / 60;
     const elapsedSinceStart = minutesNow - SERVICE_START_MINUTES;
