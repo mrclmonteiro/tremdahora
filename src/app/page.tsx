@@ -141,6 +141,8 @@ function extractStatus(payload: unknown): StatusInfo {
     situation: "Sem dados",
     reason: "Não foi possível obter o status operacional.",
     currentIntervalMinutes: null,
+    intervalNHtoMercado: null,
+    intervalMercadotoNH: null,
     trechos: [],
     aeromovel: null,
   };
@@ -188,6 +190,8 @@ export default function Home() {
     situation: "Carregando...",
     reason: "Consultando operação da linha.",
     currentIntervalMinutes: null,
+    intervalNHtoMercado: null,
+    intervalMercadotoNH: null,
     trechos: [],
     aeromovel: null,
   });
@@ -224,6 +228,8 @@ export default function Home() {
         situation: "Indisponível",
         reason: "Não foi possível atualizar o status operacional agora.",
         currentIntervalMinutes: null,
+        intervalNHtoMercado: null,
+        intervalMercadotoNH: null,
         trechos: [],
         aeromovel: null,
       });
