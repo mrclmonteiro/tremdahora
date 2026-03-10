@@ -12,6 +12,8 @@ type StatusInfo = {
   situation: string;
   reason: string;
   currentIntervalMinutes: number | null;
+  intervalNHtoMercado: number | null;
+  intervalMercadotoNH: number | null;
   trechos: { estacao1: string; estacao2: string }[];
   aeromovel: { situation: string; reason: string } | null;
 };
