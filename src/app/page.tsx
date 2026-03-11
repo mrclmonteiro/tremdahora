@@ -229,8 +229,8 @@ function getStationTrainTimes(
     const past = candidates.filter(t => t <= minutesNow);
     const future = candidates.filter(t => t > minutesNow);
     const lastPast = past.length > 0 ? past[past.length - 1] : null;
-    const arriving = lastPast !== null && minutesNow - lastPast <= 2;
-    if (arriving) {
+    const soonest = future.length > 0 ? future[0] : null;
+    const arriving = (lastPast !== null && minutesNow - lastPast <= 2) || (soonest !== null && soonest - minutesNow <= 1);    if (arriving) {
       return {
         last: past.length > 1 ? minutesToHHMM(past[past.length - 2]) : null,
         next1: minutesToHHMM(lastPast),
