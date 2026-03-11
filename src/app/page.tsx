@@ -233,7 +233,7 @@ function getStationTrainTimes(
     const arriving = (lastPast !== null && minutesNow - lastPast <= 2) || (soonest !== null && soonest - minutesNow <= 1);    if (arriving) {
       return {
         last: past.length > 1 ? minutesToHHMM(past[past.length - 2]) : null,
-        next1: minutesToHHMM(lastPast),
+        next1: lastPast !== null ? minutesToHHMM(lastPast) : null,
         next1Arriving: true,
         next2: future.length > 0 ? minutesToHHMM(future[0]) : null,
       };
