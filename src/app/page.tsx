@@ -216,10 +216,10 @@ function getStationTrainTimes(
   headwaySouth: number,
   headwayNorth: number
 ): {
-  southbound: { last: string | null; next1: string | null; next2: string | null };
-  northbound: { last: string | null; next1: string | null; next2: string | null };
+  southbound: { last: string | null; next1: string | null; next1Arriving: boolean; next2: string | null };
+  northbound: { last: string | null; next1: string | null; next1Arriving: boolean; next2: string | null };
 } {
-  const empty = { last: null, next1: null, next2: null };
+  const empty = { last: null, next1: null, next1Arriving: false, next2: null };
   if (!now) return { southbound: empty, northbound: empty };
   const minutesNow = now.getHours() * 60 + now.getMinutes() + now.getSeconds() / 60;
   function timesForDir(baseOffset: number, hw: number) {
@@ -228,9 +228,20 @@ function getStationTrainTimes(
     const candidates = [n - 1, n, n + 1, n + 2].map(i => base + i * hw).filter(t => t >= SERVICE_START_MINUTES && t < 23 * 60 + 30);
     const past = candidates.filter(t => t <= minutesNow);
     const future = candidates.filter(t => t > minutesNow);
+    const lastPast = past.length > 0 ? past[past.length - 1] : null;
+    const arriving = lastPast !== null && minutesNow - lastPast <= 2;
+    if (arriving) {
+      return {
+        last: past.length > 1 ? minutesToHHMM(past[past.length - 2]) : null,
+        next1: minutesToHHMM(lastPast),
+        next1Arriving: true,
+        next2: future.length > 0 ? minutesToHHMM(future[0]) : null,
+      };
+    }
     return {
-      last: past.length > 0 ? minutesToHHMM(past[past.length - 1]) : null,
+      last: lastPast ? minutesToHHMM(lastPast) : null,
       next1: future.length > 0 ? minutesToHHMM(future[0]) : null,
+      next1Arriving: false,
       next2: future.length > 1 ? minutesToHHMM(future[1]) : null,
     };
   }
@@ -1105,15 +1116,30 @@ export default function Home() {
               <div style={{ overflowY: "auto", flex: 1, padding: "8px 20px 40px" }}>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 20 }}>
                   {([
-                    { dir: "northbound" as const, label: "Novo Hamburgo", color: "#FF3B30" },
-                    { dir: "southbound" as const, label: "Mercado", color: "#007AFF" },
-                  ] as const).map(({ dir, label, color }) => {
+  { dir: "northbound" as const, label: "Novo Hamburgo", color: "#FF3B30" },
+  { dir: "southbound" as const, label: "Mercado", color: "#007AFF" },
+] as const).filter(({ dir }) => {
+  if (st.code === "NH") return dir === "southbound";
+  if (st.code === "MR") return dir === "northbound";
+  return true;
+}).map(({ dir, label, color }) => {
                     const t = times[dir];
                     return (
                       <div key={dir} style={{ background: "rgba(60,60,67,0.06)", borderRadius: 16, padding: "14px 14px 12px" }}>
                         <span style={{ display: "inline-block", fontSize: 9, fontWeight: 800, letterSpacing: "0.08em", textTransform: "uppercase", color: "white", background: color, borderRadius: 6, padding: "2px 6px", marginBottom: 10 }}>{label}</span>
                         {t.last && <div style={{ marginBottom: 6 }}><p style={{ fontSize: 9, color: "rgba(60,60,67,0.4)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 1 }}>Último</p><p style={{ fontSize: 18, fontWeight: 700, color: "rgba(60,60,67,0.4)", lineHeight: 1 }}>{t.last}</p></div>}
-                        {t.next1 && <div style={{ marginBottom: 4 }}><p style={{ fontSize: 9, color: "rgba(60,60,67,0.45)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 1 }}>Próximo</p><p style={{ fontSize: 22, fontWeight: 700, color: "#1C1C1E", lineHeight: 1 }}>{t.next1}</p></div>}
+                        {t.next1 && <div style={{ marginBottom: 4 }}>
+  <p style={{ fontSize: 9, color: "rgba(60,60,67,0.45)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 1 }}>Próximo</p>
+  <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
+    <p style={{ fontSize: 22, fontWeight: 700, color: "#1C1C1E", lineHeight: 1 }}>{t.next1}</p>
+    {t.next1Arriving && (
+      <span style={{ position: "relative", display: "inline-flex", width: 10, height: 10, flexShrink: 0 }}>
+        <span style={{ position: "absolute", inset: 0, borderRadius: "50%", backgroundColor: "#FF3B30", opacity: 0.5, animation: "ping 1.5s cubic-bezier(0,0,0.2,1) infinite" }} />
+        <span style={{ position: "relative", display: "inline-block", width: 10, height: 10, borderRadius: "50%", backgroundColor: "#FF3B30", boxShadow: "0 0 6px rgba(255,59,48,0.6)" }} />
+      </span>
+    )}
+  </div>
+</div>}
                         {t.next2 && <div><p style={{ fontSize: 9, color: "rgba(60,60,67,0.45)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 1 }}>Seguinte</p><p style={{ fontSize: 16, fontWeight: 600, color: "rgba(60,60,67,0.55)", lineHeight: 1 }}>{t.next2}</p></div>}
                         {!t.next1 && <p style={{ fontSize: 12, color: "rgba(60,60,67,0.3)" }}>Sem previsão</p>}
                       </div>
