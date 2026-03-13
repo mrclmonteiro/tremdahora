@@ -1191,7 +1191,6 @@ export default function Home() {
                 </div>
               )}
             </div>
-            </div>
           </div>
 
           {/* Footer — colado no fundo da sidebar */}
