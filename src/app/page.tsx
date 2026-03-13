@@ -1224,6 +1224,7 @@ export default function Home() {
                 </div>
                 )}
                 {conn && (
+  <p className="text-base font-semibold text-slate-500">Conexão disponível</p>                
   <div style={{ marginBottom: 16, padding: "14px 16px", borderRadius: 12, border: `1px solid ${conn.color}40`, background: `${conn.color}10` }}>
     {conn.integrated ? (
       <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
@@ -1232,7 +1233,6 @@ export default function Home() {
           <circle cx="11" cy="31" r="8" fill="#FF3B30" stroke="white" strokeWidth="1.5"/>
           <circle cx="41" cy="31" r="8" fill="#FF3B30" stroke="white" strokeWidth="1.5"/>
           <text x="41" y="35" fontSize="10" textAnchor="middle" fill="white">✈</text>
-          <line x1="49" y1="24" x2="110" y2="5" stroke={conn.color} strokeWidth="3" strokeLinecap="round"/>
           <circle cx="110" cy="5" r="7" fill={conn.color} stroke="white" strokeWidth="2"/>
         </svg>
         <div>
