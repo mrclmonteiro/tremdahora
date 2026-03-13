@@ -774,14 +774,14 @@ export default function Home() {
 
       {/* Mapa da linha ocupa a tela toda */}
       <div
-        className="relative flex flex-col items-center justify-center select-none pointer-events-none z-0 px-3 pb-32 w-full min-h-[100dvh]"
+        className="relative flex flex-col items-center justify-center select-none pointer-events-none z-0 px-3 md:px-8 pb-32 w-full min-h-[100dvh]"
         style={{
           boxSizing: "border-box",
           paddingTop: "calc(max(env(safe-area-inset-top), 48px) + 72px)",
         }}
       >
         {/* --- MAPA DA LINHA --- */}
-        <section className="relative w-full max-w-2xl md:max-w-3xl">
+        <section className="relative w-full max-w-2xl md:[zoom:1.35]">
           <div className="relative mx-auto">
             {/* Linha principal azul Trensurb */}
             <div
@@ -1160,7 +1160,7 @@ export default function Home() {
       <div className="hidden md:flex flex-row h-screen shrink-0 p-3 z-10 order-first" style={{ position: "relative", overflow: "visible" }}>
 
         {/* Status sidebar */}
-        <aside ref={sidebarRef} className="flex flex-col w-84 h-full overflow-y-auto rounded-2xl" style={{ background: "rgba(245,247,251,0.82)", backdropFilter: "blur(28px) saturate(180%)", WebkitBackdropFilter: "blur(28px) saturate(180%)", border: "1px solid rgba(255,255,255,0.55)", boxShadow: "0 8px 40px rgba(0,0,0,0.13)" }}>
+        <aside ref={sidebarRef} className="flex flex-col h-full overflow-y-auto rounded-2xl" style={{ width: 340, background: "rgba(245,247,251,0.82)", backdropFilter: "blur(28px) saturate(180%)", WebkitBackdropFilter: "blur(28px) saturate(180%)", border: "1px solid rgba(255,255,255,0.55)", boxShadow: "0 8px 40px rgba(0,0,0,0.13)" }}>
           <div style={{ padding: "20px 20px 0", flex: 1 }}>
             <div ref={toggleRef} className="p-1 flex items-center rounded-full w-full mb-6" style={{ background: "rgba(60,60,67,0.10)", cursor: "pointer", position: "relative" }} onClick={() => setDistanceFrom(d => d === "mercado" ? "nh" : "mercado")}>
               <div style={{ position: "absolute", top: 4, bottom: 4, left: 4, width: "calc(50% - 4px)", background: "rgba(255,255,255,0.95)", borderRadius: 99, boxShadow: "0 1px 6px rgba(0,0,0,0.10)", transform: distanceFrom === "nh" ? "translateX(100%)" : "translateX(0%)", transition: "transform 0.3s cubic-bezier(0.34, 1.2, 0.64, 1)", pointerEvents: "none" }} />
@@ -1207,14 +1207,14 @@ export default function Home() {
             </div>
           </div>
 
-          {/* footer */}
+          {/* Footer — colado no fundo da sidebar */}
           <div style={{ padding: "16px 20px 20px", borderTop: "1px solid rgba(60,60,67,0.09)", background: "rgba(60,60,67,0.04)" }}>
-            <p style={{ fontSize: 10, color: "#3c3c43af", lineHeight: 1.5, marginBottom: 12 }}>
-              O <span style={{ color: "rgba(60, 60, 67, 0.79)" }}>Trem da Hora</span> é um app desenvolvido por{" "}
-              <span style={{ color: "rgba(60, 60, 67, 0.79)" }}>Marcelo Monteiro</span> com auxílio da{" "}
-              <span style={{ color: "rgba(60, 60, 67, 0.79)" }}>Claude</span>.
+            <p style={{ fontSize: 10, color: "rgba(60,60,67,0.3)", lineHeight: 1.5, marginBottom: 12 }}>
+              O <span style={{ color: "rgba(60,60,67,0.65)" }}>Trem da Hora</span> é um app desenvolvido por{" "}
+              <span style={{ color: "rgba(60,60,67,0.65)" }}>Marcelo Monteiro</span> com auxílio da{" "}
+              <span style={{ color: "rgba(60,60,67,0.65)" }}>Claude</span>.
               Agradecimento especial a{" "}
-              <a href="https://www.linkedin.com/in/pchgab/" target="_blank" rel="noopener noreferrer" style={{ color: "rgba(60, 60, 67, 0.79)", textDecoration: "none", borderBottom: "1px solid rgba(60,60,67,0.25)" }}>Gabrielle Pacheco</a>
+              <a href="https://www.linkedin.com/in/pchgab/" target="_blank" rel="noopener noreferrer" style={{ color: "rgba(60,60,67,0.65)", textDecoration: "none", borderBottom: "1px solid rgba(60,60,67,0.25)" }}>Gabrielle Pacheco</a>
               , que teve a brilhante ideia de fazer um nome <i>bem da hora</i> para o app.
             </p>
             <div className="flex items-center justify-between">
@@ -1229,7 +1229,7 @@ export default function Home() {
                 ))}
               </div>
               <div className="flex items-center gap-2">
-                <span style={{ fontSize: 11, color: "#3c3c43af" }}>Gostou?</span>
+                <span style={{ fontSize: 11, color: "rgba(60,60,67,0.4)" }}>Gostou?</span>
                 <a href="https://www.buymeacoffee.com/mrclmonteiro" target="_blank" rel="noopener noreferrer"
                   style={{ display: "inline-flex", alignItems: "center", gap: 5, background: "#3c3c43", border: "1px solid rgba(255,255,255,0.15)", borderRadius: 99, padding: "5px 12px", textDecoration: "none" }}>
                   <span style={{ fontSize: 13 }}>☕</span>
