@@ -835,30 +835,23 @@ export default function Home() {
                           {conn?.integrated ? (
   <div style={{ position: "relative" }}>
     <svg
-      width="180" height="16"
-      style={{ overflow: "visible", display: "block", marginLeft: -48, pointerEvents: "none", zIndex: 20, position: "relative" }}
+      width="30" height="16"
+      style={{ overflow: "visible", position: "absolute", left: -48, top: "50%", transform: "translateY(-50%)", pointerEvents: "none", zIndex: 20, display: "block" }}
       fill="none"
     >
-      {/* Cápsula azul */}
       <rect x="-9" y="-9" width="36" height="18" rx="9" fill="white" stroke="#007AFF" strokeWidth="2.5"/>
-      {/* Bolinha esquerda — estação */}
       <circle cx="0" cy="0" r="7" fill="#FF3B30" stroke="white" strokeWidth="1.5"/>
-      {/* Bolinha direita — Aeromóvel */}
       <circle cx="18" cy="0" r="7" fill="#FF3B30" stroke="white" strokeWidth="1.5"/>
       <text x="18" y="3.5" fontSize="8" textAnchor="middle" fill="white">✈</text>
-      {/* Linha diagonal */}
       <line x1="24" y1="-5" x2="86" y2="-46" stroke={conn.color} strokeWidth="3" strokeLinecap="round"/>
-      {/* Bolinha Salgado Filho */}
       <circle cx="86" cy="-46" r="7" fill={conn.color} stroke="white" strokeWidth="2"/>
-      {/* Label Aeromóvel ao longo da linha */}
       <path id="aero-path" d="M 28,-8 L 84,-44" fill="none"/>
       <text fontSize="8" fontWeight="700" fill={conn.color}>
         <textPath href="#aero-path" startOffset="10%" stroke="rgba(245,247,251,0.9)" strokeWidth="3" paintOrder="stroke">Aeromóvel</textPath>
       </text>
-      {/* Label Salgado Filho */}
       <text x="98" y="-42" fontSize="9" fontWeight="600" fill="#1C1C1E">Salgado Filho</text>
     </svg>
-    <p className="text-xs" style={{ color: "rgba(60,60,67,0.5)" }}>
+    <p className="text-xs" style={{ color: "rgba(60,60,67,0.5)", paddingLeft: 36 }}>
       {distanceFrom === "mercado"
         ? `${station.minutesFromMercado} min`
         : `${ONE_WAY_TRAVEL_MINUTES - station.minutesFromMercado} min`}
