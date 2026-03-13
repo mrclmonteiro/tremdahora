@@ -836,7 +836,7 @@ export default function Home() {
   <div style={{ position: "relative" }}>
     <svg
       width="30" height="16"
-      style={{ overflow: "visible", position: "absolute", left: -48, top: "90%", transform: "translateY(-50%)", pointerEvents: "none", zIndex: 20, display: "block" }}
+      style={{ overflow: "visible", position: "absolute", left: -48, top: "95%", transform: "translateY(-50%)", pointerEvents: "none", zIndex: 20, display: "block" }}
       fill="none"
     >
       <rect x="-9" y="-9" width="36" height="18" rx="9" fill="white" stroke="#007AFF" strokeWidth="2.5"/>
