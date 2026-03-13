@@ -1227,12 +1227,12 @@ export default function Home() {
   <div style={{ marginBottom: 16 }}>
     <p className="text-base font-semibold text-slate-500" style={{ marginBottom: 8 }}>Conexão disponível</p>
     {conn.integrated ? (
-      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-        <svg width="80" height="24" viewBox="0 0 80 24" fill="none" style={{ flexShrink: 0 }}>
-          <rect x="0" y="1" width="52" height="22" rx="11" fill="white" stroke="#007AFF" strokeWidth="2.5"/>
-          <circle cx="11" cy="12" r="8" fill="#FF3B30" stroke="white" strokeWidth="1.5"/>
-          <circle cx="41" cy="12" r="8" fill="#FF3B30" stroke="white" strokeWidth="1.5"/>
-          <text x="41" y="16" fontSize="10" textAnchor="middle" fill="white">✈</text>
+      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        <svg width="60" height="24" viewBox="-2 0 56 24" fill="none" style={{ flexShrink: 0 }}>
+  <rect x="0" y="1" width="52" height="22" rx="11" fill="white" stroke="#007AFF" strokeWidth="2.5"/>
+  <circle cx="11" cy="12" r="8" fill="#FF3B30" stroke="white" strokeWidth="1.5"/>
+  <circle cx="41" cy="12" r="8" fill="#FF3B30" stroke="white" strokeWidth="1.5"/>
+  <text x="41" y="16" fontSize="10" textAnchor="middle" fill="white">✈</text>
         </svg>
         <div>
           <div style={{ fontSize: 13, fontWeight: 700, color: conn.color }}>{conn.label}</div>
