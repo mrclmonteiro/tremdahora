@@ -86,6 +86,7 @@ export default function RootLayout({
         {children}
 
         <div
+          className="md:hidden"
           style={{
             position: "fixed",
             top: 0,
@@ -98,6 +99,7 @@ export default function RootLayout({
           }}
         />
         <div
+          className="md:hidden"
           style={{
             position: "fixed",
             bottom: 0,

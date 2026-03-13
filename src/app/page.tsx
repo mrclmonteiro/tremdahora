@@ -274,21 +274,29 @@ function getStationTrainTimes(
 }
 
 
-const TREM_TOUR_STEPS = [
+const TREM_TOUR_STEPS_MOBILE = [
   { msg: "Arraste para cima para conferir o status e os intervalos de partidas entre trens", anchor: "modal" as const },
   { msg: "Escolha entre a visualização dos terminais Mercado e Novo Hamburgo", anchor: "header" as const },
   { msg: "Toque em uma estação para conferir os próximos horários previstos", anchor: "station" as const },
 ]
-type TremTourAnchor = typeof TREM_TOUR_STEPS[number]["anchor"]
+const TREM_TOUR_STEPS_DESKTOP = [
+  { msg: "Aqui você acompanha o status da operação e os intervalos entre trens em tempo real", anchor: "sidebar" as const },
+  { msg: "Alterne entre a perspectiva do Mercado e de Novo Hamburgo com esse toggle", anchor: "toggle" as const },
+  { msg: "Clique em uma estação para ver os próximos horários previstos", anchor: "station" as const },
+]
+const TREM_TOUR_STEPS = TREM_TOUR_STEPS_MOBILE
+type TremTourAnchor = "modal" | "header" | "station" | "sidebar" | "toggle"
 
 function TremTour({
-  step, onAdvance, modalRef, headerRef, stationRef,
+  step, onAdvance, modalRef, headerRef, stationRef, sidebarRef, toggleRef,
 }: {
   step: number
   onAdvance: () => void
   modalRef: React.RefObject<HTMLDivElement | null>
   headerRef: React.RefObject<HTMLDivElement | null>
   stationRef: React.RefObject<HTMLLIElement | null>
+  sidebarRef: React.RefObject<HTMLElement | null>
+  toggleRef: React.RefObject<HTMLDivElement | null>
 }) {
   const [visible, setVisible] = React.useState(false)
   const [bubblePos, setBubblePos] = React.useState<{
@@ -303,8 +311,10 @@ function TremTour({
     raf1 = requestAnimationFrame(() => {
       if (!mounted) return
       const W = window.innerWidth
+      const isDesktop = W >= 768
       const BW = Math.min(260, W - 32)
-      const anchor: TremTourAnchor = TREM_TOUR_STEPS[step]?.anchor
+      const steps = isDesktop ? TREM_TOUR_STEPS_DESKTOP : TREM_TOUR_STEPS_MOBILE
+      const anchor: TremTourAnchor = steps[step]?.anchor
       let pos: typeof bubblePos = null
 
       if (anchor === "modal" && modalRef.current) {
@@ -315,10 +325,18 @@ function TremTour({
         const r = headerRef.current.getBoundingClientRect()
         const bl = Math.max(16, W / 2 - BW / 2)
         pos = { left: bl, top: r.bottom + 12, width: BW, tailX: W / 2 - bl - 8, tailSide: "top" }
+      } else if (anchor === "sidebar" && sidebarRef.current) {
+        const r = sidebarRef.current.getBoundingClientRect()
+        const bl = r.right + 16
+        pos = { left: bl, top: r.top + 16, width: BW, tailX: -18, tailSide: "top" }
+      } else if (anchor === "toggle" && toggleRef.current) {
+        const r = toggleRef.current.getBoundingClientRect()
+        const bl = r.right + 16
+        pos = { left: bl, top: r.top - 8, width: BW, tailX: -18, tailSide: "top" }
       } else if (anchor === "station" && stationRef.current) {
         const r = stationRef.current.getBoundingClientRect()
-        const bl = Math.max(16, W / 2 - BW / 2)
-        pos = { left: bl, top: r.bottom + 10, width: BW, tailX: W / 2 - bl - 8, tailSide: "top" }
+        const bl = isDesktop ? r.left + 32 : Math.max(16, W / 2 - BW / 2)
+        pos = { left: bl, top: r.bottom + 10, width: BW, tailX: isDesktop ? 24 : W / 2 - bl - 8, tailSide: "top" }
       }
 
       if (mounted) setBubblePos(pos)
@@ -327,8 +345,11 @@ function TremTour({
     return () => { mounted = false; cancelAnimationFrame(raf1); cancelAnimationFrame(raf2) }
   }, [step]) // eslint-disable-line react-hooks/exhaustive-deps
 
+  const W2 = typeof window !== "undefined" ? window.innerWidth : 0
+  const isDesktop2 = W2 >= 768
+  const activeSteps = isDesktop2 ? TREM_TOUR_STEPS_DESKTOP : TREM_TOUR_STEPS_MOBILE
   if (!bubblePos) return null
-  const isLast = step === TREM_TOUR_STEPS.length - 1
+  const isLast = step === activeSteps.length - 1
 
   return (
     <div
@@ -372,11 +393,11 @@ function TremTour({
           left: bubblePos.tailX,
         }} />
 
-        <p style={{ margin: 0, marginBottom: 12 }}>{TREM_TOUR_STEPS[step].msg}</p>
+        <p style={{ margin: 0, marginBottom: 12 }}>{activeSteps[step].msg}</p>
 
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div style={{ display: "flex", gap: 4 }}>
-            {TREM_TOUR_STEPS.map((_, i) => (
+            {activeSteps.map((_, i) => (
               <div key={i} style={{
                 height: 5, width: i === step ? 14 : 5, borderRadius: 3,
                 background: i === step ? "#007AFF" : "rgba(0,0,0,0.15)",
@@ -442,6 +463,8 @@ export default function Home() {
   const [headerVisible, setHeaderVisible] = useState(true);
   const headerRef = useRef<HTMLDivElement>(null);
   const stationTourRef = useRef<HTMLLIElement>(null);
+  const sidebarRef = useRef<HTMLElement>(null);
+  const toggleRef = useRef<HTMLDivElement>(null);
   const [tourStep, setTourStep] = useState(-1);
   const [headwayPeriods, setHeadwayPeriods] = useState<HeadwayPeriod[]>([]);
     useEffect(() => {
@@ -1123,9 +1146,9 @@ export default function Home() {
       <div className="hidden md:flex flex-row h-screen shrink-0 p-3 z-10 order-first" style={{ position: "relative", overflow: "visible" }}>
 
         {/* Status sidebar */}
-        <aside className="flex flex-col w-84 h-full overflow-y-auto rounded-2xl" style={{ background: "rgba(245,247,251,0.82)", backdropFilter: "blur(28px) saturate(180%)", WebkitBackdropFilter: "blur(28px) saturate(180%)", border: "1px solid rgba(255,255,255,0.55)", boxShadow: "0 8px 40px rgba(0,0,0,0.13)" }}>
-          <div style={{ padding: "20px 20px 32px" }}>
-            <div className="p-1 flex items-center rounded-full w-full mb-6" style={{ background: "rgba(60,60,67,0.10)", cursor: "pointer", position: "relative" }} onClick={() => setDistanceFrom(d => d === "mercado" ? "nh" : "mercado")}>
+        <aside ref={sidebarRef} className="flex flex-col w-84 h-full overflow-y-auto rounded-2xl" style={{ background: "rgba(245,247,251,0.82)", backdropFilter: "blur(28px) saturate(180%)", WebkitBackdropFilter: "blur(28px) saturate(180%)", border: "1px solid rgba(255,255,255,0.55)", boxShadow: "0 8px 40px rgba(0,0,0,0.13)" }}>
+          <div style={{ padding: "20px 20px 0", flex: 1 }}>
+            <div ref={toggleRef} className="p-1 flex items-center rounded-full w-full mb-6" style={{ background: "rgba(60,60,67,0.10)", cursor: "pointer", position: "relative" }} onClick={() => setDistanceFrom(d => d === "mercado" ? "nh" : "mercado")}>
               <div style={{ position: "absolute", top: 4, bottom: 4, left: 4, width: "calc(50% - 4px)", background: "rgba(255,255,255,0.95)", borderRadius: 99, boxShadow: "0 1px 6px rgba(0,0,0,0.10)", transform: distanceFrom === "nh" ? "translateX(100%)" : "translateX(0%)", transition: "transform 0.3s cubic-bezier(0.34, 1.2, 0.64, 1)", pointerEvents: "none" }} />
               <span className="flex-1 text-center text-sm py-2 font-semibold rounded-full relative z-10" style={{ color: distanceFrom === "mercado" ? "#1C1C1E" : "rgba(60,60,67,0.45)" }}>↓ Mercado</span>
               <span className="flex-1 text-center text-sm py-2 font-semibold rounded-full relative z-10" style={{ color: distanceFrom === "nh" ? "#1C1C1E" : "rgba(60,60,67,0.45)" }}>↑ Novo Hamburgo</span>
@@ -1168,16 +1191,36 @@ export default function Home() {
                 </div>
               )}
             </div>
-            <div style={{ marginTop: 32, paddingTop: 16, borderTop: "1px solid rgba(60,60,67,0.1)" }}>
-              <p style={{ fontSize: 10, color: "rgba(60,60,67,0.3)", lineHeight: 1.5, marginBottom: 12 }}>O <span style={{ color: "rgba(60,60,67,0.65)" }}>Trem da Hora</span> é um app desenvolvido por <span style={{ color: "rgba(60,60,67,0.65)" }}>Marcelo Monteiro</span> com auxílio da <span style={{ color: "rgba(60,60,67,0.65)" }}>Claude</span>. Agradecimento especial a <a href="https://www.linkedin.com/in/pchgab/" target="_blank" rel="noopener noreferrer" style={{ color: "rgba(60,60,67,0.65)", textDecoration: "none", borderBottom: "1px solid rgba(60,60,67,0.25)" }}>Gabrielle Pacheco</a>, que teve a brilhante ideia de fazer um nome <i>bem da hora</i> para o app.</p>
-              <div className="flex gap-3 items-center flex-wrap">
+            </div>
+          </div>
+
+          {/* Footer — colado no fundo da sidebar */}
+          <div style={{ padding: "16px 20px 20px", borderTop: "1px solid rgba(60,60,67,0.09)", background: "rgba(60,60,67,0.04)" }}>
+            <p style={{ fontSize: 10, color: "rgba(60,60,67,0.3)", lineHeight: 1.5, marginBottom: 12 }}>
+              O <span style={{ color: "rgba(60,60,67,0.65)" }}>Trem da Hora</span> é um app desenvolvido por{" "}
+              <span style={{ color: "rgba(60,60,67,0.65)" }}>Marcelo Monteiro</span> com auxílio da{" "}
+              <span style={{ color: "rgba(60,60,67,0.65)" }}>Claude</span>.
+              Agradecimento especial a{" "}
+              <a href="https://www.linkedin.com/in/pchgab/" target="_blank" rel="noopener noreferrer" style={{ color: "rgba(60,60,67,0.65)", textDecoration: "none", borderBottom: "1px solid rgba(60,60,67,0.25)" }}>Gabrielle Pacheco</a>
+              , que teve a brilhante ideia de fazer um nome <i>bem da hora</i> para o app.
+            </p>
+            <div className="flex items-center justify-between">
+              <div className="flex gap-4 items-center">
                 {[
-                  { href: "https://x.com/mrclmonteiro", label: "X", svg: <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.746l7.73-8.835L1.254 2.25H8.08l4.26 5.636zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg> },
-                  { href: "https://www.instagram.com/mrclmonteiro/", label: "Instagram", svg: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 11.37A4 4 0 1112.63 8 4 4 0 0116 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg> },
-                  { href: "https://github.com/mrclmonteiro/tremdahora", label: "GitHub", svg: <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.477 2 2 6.477 2 12c0 4.42 2.865 8.166 6.839 9.489.5.092.682-.217.682-.482 0-.237-.008-.866-.013-1.7-2.782.603-3.369-1.342-3.369-1.342-.454-1.155-1.11-1.462-1.11-1.462-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.578 9.578 0 0112 6.836c.85.004 1.705.114 2.504.336 1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.202 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.743 0 .267.18.578.688.48C19.138 20.163 22 16.418 22 12c0-5.523-4.477-10-10-10z"/></svg> },
-                ].map(({ href, label, svg }) => <a key={label} href={href} target="_blank" rel="noopener noreferrer" style={{ color: "rgba(60,60,67,0.35)", lineHeight: 0 }}>{svg}</a>)}
-                <a href="https://www.buymeacoffee.com/mrclmonteiro" target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: 5, background: "#3c3c43", border: "1px solid rgba(255,255,255,0.15)", borderRadius: 99, padding: "4px 10px", textDecoration: "none" }}>
-                  <span style={{ fontSize: 11 }}>☕</span><span style={{ fontSize: 10, fontWeight: 600, color: "white" }}>Me apoia</span>
+                  { href: "https://x.com/mrclmonteiro", label: "X", svg: <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.746l7.73-8.835L1.254 2.25H8.08l4.26 5.636zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg> },
+                  { href: "https://www.instagram.com/mrclmonteiro/", label: "Instagram", svg: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 11.37A4 4 0 1112.63 8 4 4 0 0116 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg> },
+                  { href: "https://www.linkedin.com/in/mrclmonteiro/", label: "LinkedIn", svg: <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg> },
+                  { href: "https://github.com/mrclmonteiro/tremdahora", label: "GitHub", svg: <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.477 2 2 6.477 2 12c0 4.42 2.865 8.166 6.839 9.489.5.092.682-.217.682-.482 0-.237-.008-.866-.013-1.7-2.782.603-3.369-1.342-3.369-1.342-.454-1.155-1.11-1.462-1.11-1.462-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.578 9.578 0 0112 6.836c.85.004 1.705.114 2.504.336 1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.202 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.743 0 .267.18.578.688.48C19.138 20.163 22 16.418 22 12c0-5.523-4.477-10-10-10z"/></svg> },
+                ].map(({ href, label, svg }) => (
+                  <a key={label} href={href} target="_blank" rel="noopener noreferrer" style={{ color: "rgba(60,60,67,0.35)", lineHeight: 0 }}>{svg}</a>
+                ))}
+              </div>
+              <div className="flex items-center gap-2">
+                <span style={{ fontSize: 11, color: "rgba(60,60,67,0.4)" }}>Gostou?</span>
+                <a href="https://www.buymeacoffee.com/mrclmonteiro" target="_blank" rel="noopener noreferrer"
+                  style={{ display: "inline-flex", alignItems: "center", gap: 5, background: "#3c3c43", border: "1px solid rgba(255,255,255,0.15)", borderRadius: 99, padding: "5px 12px", textDecoration: "none" }}>
+                  <span style={{ fontSize: 13 }}>☕</span>
+                  <span style={{ fontSize: 11, fontWeight: 600, color: "white", whiteSpace: "nowrap" }}>Me apoia um café</span>
                 </a>
               </div>
             </div>
@@ -1446,6 +1489,8 @@ export default function Home() {
           modalRef={modalRef}
           headerRef={headerRef}
           stationRef={stationTourRef}
+          sidebarRef={sidebarRef}
+          toggleRef={toggleRef}
         />
       )}
     </div>
