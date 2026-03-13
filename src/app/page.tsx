@@ -1361,6 +1361,8 @@ export default function Home() {
         );
       })()}
 
+      {/* ── STATION MODAL — mobile only ── */}
+      {selectedStationCode && (() => {
         const st = STATIONS.find(s => s.code === selectedStationCode)!;
         const conn = CONNECTIONS[selectedStationCode];
         const times = getStationTrainTimes(st.minutesFromMercado, now, headwayPeriods, headwaySouth, headwayNorth);
@@ -1374,7 +1376,7 @@ export default function Home() {
         ];
         const activeFacilities = facilities.filter(f => f.active);
         return (
-          <div className="fixed inset-0 flex flex-col justify-end" style={{ zIndex: 60, pointerEvents: stationModalOpen ? "auto" : "none" }}>
+          <div className="md:hidden fixed inset-0 flex flex-col justify-end" style={{ zIndex: 60, pointerEvents: stationModalOpen ? "auto" : "none" }}>
             <div className="absolute inset-0" style={{ background: "rgba(0,0,0,0.28)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)", opacity: stationModalOpen ? 1 : 0, transition: "opacity 0.35s ease" }} onClick={closeStationModal} />
             <div
               ref={stationModalRef}
