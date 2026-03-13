@@ -833,33 +833,36 @@ export default function Home() {
                         {/* Minutos + branch de conexão */}
                         <div className="py-3 pl-3">
                           {conn?.integrated ? (
-  <div style={{ position: "relative", height: 48 }}>
+  <div style={{ position: "relative" }}>
     <svg
-      width="160" height="64"
-      viewBox="-8 -52 160 64"
-      style={{ overflow: "visible", position: "absolute", left: -8, top: "50%", transform: "translateY(-50%)", pointerEvents: "none", zIndex: 20 }}
+      width="10" height="10"
+      viewBox="-20 -50 150 60"
+      style={{ overflow: "visible", position: "absolute", left: -20, top: "50%", transform: "translateY(-50%)", pointerEvents: "none", zIndex: 20 }}
       fill="none"
     >
-      {/* Segundo círculo do figure-8 (acima da bolinha da estação) */}
-      <circle cx="0" cy="-14" r="8" fill="white" stroke="#007AFF" strokeWidth="2.5"/>
-      <circle cx="0" cy="-14" r="5" fill="#FF3B30" stroke="white" strokeWidth="1.5"/>
-      {/* Linha diagonal indo pra cima-direita */}
-      <line x1="6" y1="-20" x2="72" y2="-48" stroke={conn.color} strokeWidth="3.5" strokeLinecap="round"/>
-      {/* Bolinha terminal — Salgado Filho */}
-      <circle cx="72" cy="-48" r="7" fill={conn.color} stroke="white" strokeWidth="2"/>
-      {/* Seta pra cima */}
-      <line x1="72" y1="-55" x2="72" y2="-68" stroke={conn.color} strokeWidth="2.5" strokeLinecap="round"/>
-      <polygon points="72,-76 67,-66 77,-66" fill={conn.color}/>
-      {/* Label "Aeromóvel" ao longo da linha */}
-      <text
-        x="36" y="-38" fontSize="9" fontWeight="700"
-        fill={conn.color} stroke="rgba(245,247,251,0.9)" strokeWidth="3.5" paintOrder="stroke"
-        transform="rotate(-20,36,-38)" textAnchor="middle"
-      >Aeromóvel</text>
-      {/* Label "Salgado Filho" */}
-      <text x="84" y="-44" fontSize="10" fontWeight="600" fill="#1C1C1E">Salgado Filho</text>
+      {/* Cápsula azul conectando os dois círculos */}
+      <rect x="-9" y="-9" width="36" height="18" rx="9" fill="white" stroke="#007AFF" strokeWidth="2.5"/>
+      {/* Dot esquerdo — estação (sobrepõe a bolinha vermelha existente) */}
+      <circle cx="0" cy="0" r="7" fill="#FF3B30" stroke="white" strokeWidth="1.5"/>
+      {/* Dot direito — Aeromóvel */}
+      <circle cx="18" cy="0" r="7" fill="#FF3B30" stroke="white" strokeWidth="1.5"/>
+      {/* Ícone simples de avião no dot do Aeromóvel */}
+      <text x="18" y="3.5" fontSize="8" textAnchor="middle" fill="white">✈</text>
+      {/* Linha diagonal para Salgado Filho */}
+      <line x1="24" y1="-5" x2="86" y2="-46" stroke={conn.color} strokeWidth="3" strokeLinecap="round"/>
+      {/* Bolinha terminal */}
+      <circle cx="86" cy="-46" r="7" fill={conn.color} stroke="white" strokeWidth="2"/>
+      {/* Label Aeromóvel — path alinhado com a linha */}
+      <path id="aero-path" d="M 28,-8 L 84,-44" fill="none"/>
+      <text fontSize="8" fontWeight="700" fill={conn.color}>
+        <textPath href="#aero-path" startOffset="10%" stroke="rgba(245,247,251,0.9)" strokeWidth="3" paintOrder="stroke">
+          Aeromóvel
+        </textPath>
+      </text>
+      {/* Label Salgado Filho */}
+      <text x="98" y="-42" fontSize="9" fontWeight="600" fill="#1C1C1E">Salgado Filho</text>
     </svg>
-    <p className="text-xs" style={{ color: "rgba(60,60,67,0.5)", paddingTop: 28 }}>
+    <p className="text-xs" style={{ color: "rgba(60,60,67,0.5)" }}>
       {distanceFrom === "mercado"
         ? `${station.minutesFromMercado} min`
         : `${ONE_WAY_TRAVEL_MINUTES - station.minutesFromMercado} min`}
