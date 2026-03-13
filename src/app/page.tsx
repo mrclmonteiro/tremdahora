@@ -87,7 +87,6 @@ type StationConnection = {
 
 const CONNECTIONS: Record<string, StationConnection> = {
   AP: { label: "Aeromóvel", sublabel: "Salgado Filho", color: "#34C759", integrated: true },
-  MR: { label: "Terminal Hidroviário", color: "#5AC8FA", integrated: false },
 };
 
 type CitySection = {
@@ -835,22 +834,22 @@ export default function Home() {
                         <div className="py-3 pl-3">
                           {conn?.integrated ? (
                             <div style={{ position: "relative" }}>
-                              <div style={{ position: "absolute", bottom: "50%", left: -16, pointerEvents: "none" }}>
-                                <svg width="42" height="36" viewBox="0 0 42 36" fill="none" style={{ display: "block", overflow: "visible" }}>
-                                  <line x1="0" y1="36" x2="36" y2="4" stroke={conn.color} strokeWidth="3" strokeLinecap="round"/>
-                                  <circle cx="36" cy="4" r="5" fill={conn.color} stroke="white" strokeWidth="2"/>
+                              <div style={{ position: "absolute", bottom: "50%", left: 0, pointerEvents: "none" }}>
+                                <svg width="52" height="28" viewBox="0 0 52 28" fill="none" style={{ display: "block", overflow: "visible" }}>
+                                <line x1="0" y1="28" x2="44" y2="4" stroke={conn.color} strokeWidth="3" strokeLinecap="round"/>
+                                <circle cx="44" cy="4" r="5" fill={conn.color} stroke="white" strokeWidth="2"/>
                                 </svg>
-                                <div style={{ position: "absolute", top: 0, left: 42, transform: "translateY(-50%)", whiteSpace: "nowrap" }}>
-                                  <div className="text-[10px] font-bold leading-tight" style={{ color: conn.color }}>{conn.label}</div>
-                                  {conn.sublabel && <div className="text-[9px] leading-tight" style={{ color: "rgba(60,60,67,0.5)" }}>{conn.sublabel}</div>}
+                                <div style={{ position: "absolute", top: 0, left: 50, transform: "translateY(-50%)", whiteSpace: "nowrap" }}>
+                                <div className="text-[10px] font-bold leading-tight" style={{ color: conn.color }}>{conn.label}</div>
+                                {conn.sublabel && <div className="text-[9px] leading-tight" style={{ color: "rgba(60,60,67,0.5)" }}>{conn.sublabel}</div>}
                                 </div>
-                              </div>
-                              <p className="text-xs" style={{ color: "rgba(60,60,67,0.5)" }}>
+                                </div>
+                                <p className="text-xs" style={{ color: "rgba(60,60,67,0.5)", marginTop: 18 }}>
                                 {distanceFrom === "mercado"
-                                  ? `${station.minutesFromMercado} min`
-                                  : `${ONE_WAY_TRAVEL_MINUTES - station.minutesFromMercado} min`}
-                              </p>
-                            </div>
+                                ? `${station.minutesFromMercado} min`
+                                : `${ONE_WAY_TRAVEL_MINUTES - station.minutesFromMercado} min`}
+                                </p>
+                              </div>
                           ) : conn ? (
                             /* Terminal Hidroviário: badge externo, não integrado */
                             <div className="flex flex-col gap-0.5">
@@ -1004,11 +1003,17 @@ export default function Home() {
                     </div>
                   </>
                 ) : (
-                  <div className="flex items-center gap-2">
+                  <>
+                    <div className="flex items-center gap-2">
                     <span className="text-base font-semibold text-slate-900">{status.intervalNHtoMercado ?? status.currentIntervalMinutes} min</span>
-                    <span className="text-sm text-slate-500">entre trens</span>
-                  </div>
-                )}
+                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded" style={{ background: "#FF3B30", color: "white", letterSpacing: "0.06em" }}>NOVO HAMBURGO</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                    <span className="text-base font-semibold text-slate-900">{status.intervalNHtoMercado ?? status.currentIntervalMinutes} min</span>
+                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded" style={{ background: "#007AFF", color: "white", letterSpacing: "0.06em" }}>MERCADO</span>
+                    </div>
+                    </>
+                  )}
               </div>
             )}
             
