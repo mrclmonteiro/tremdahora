@@ -1224,12 +1224,31 @@ export default function Home() {
                 </div>
                 )}
                 {conn && (
-                  <div style={{ marginBottom: 16, padding: "10px 14px", borderRadius: 12, border: `1px solid ${conn.color}40`, background: `${conn.color}10`, display: "flex", alignItems: "center", gap: 8 }}>
-                    <div style={{ width: 8, height: 8, borderRadius: "50%", background: conn.color, flexShrink: 0 }} />
-                    <span style={{ fontSize: 13, fontWeight: 600, color: conn.color }}>{conn.label}</span>
-                    {conn.sublabel && <span style={{ fontSize: 12, color: "rgba(60,60,67,0.5)" }}>· {conn.sublabel}</span>}
-                  </div>
-                )}
+  <div style={{ marginBottom: 16, padding: "14px 16px", borderRadius: 12, border: `1px solid ${conn.color}40`, background: `${conn.color}10` }}>
+    {conn.integrated ? (
+      <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+        <svg width="120" height="60" viewBox="0 0 120 60" fill="none" style={{ flexShrink: 0 }}>
+          <rect x="0" y="20" width="52" height="22" rx="11" fill="white" stroke="#007AFF" strokeWidth="2.5"/>
+          <circle cx="11" cy="31" r="8" fill="#FF3B30" stroke="white" strokeWidth="1.5"/>
+          <circle cx="41" cy="31" r="8" fill="#FF3B30" stroke="white" strokeWidth="1.5"/>
+          <text x="41" y="35" fontSize="10" textAnchor="middle" fill="white">✈</text>
+          <line x1="49" y1="24" x2="110" y2="5" stroke={conn.color} strokeWidth="3" strokeLinecap="round"/>
+          <circle cx="110" cy="5" r="7" fill={conn.color} stroke="white" strokeWidth="2"/>
+        </svg>
+        <div>
+          <div style={{ fontSize: 13, fontWeight: 700, color: conn.color, lineHeight: 1.3 }}>{conn.label}</div>
+          {conn.sublabel && <div style={{ fontSize: 12, color: "rgba(60,60,67,0.5)", marginTop: 2 }}>{conn.sublabel}</div>}
+        </div>
+      </div>
+    ) : (
+      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        <div style={{ width: 8, height: 8, borderRadius: "50%", background: conn.color, flexShrink: 0 }} />
+        <span style={{ fontSize: 13, fontWeight: 600, color: conn.color }}>{conn.label}</span>
+        {conn.sublabel && <span style={{ fontSize: 12, color: "rgba(60,60,67,0.5)" }}>· {conn.sublabel}</span>}
+      </div>
+    )}
+  </div>
+)}
                 <div style={{ marginBottom: 16, display: "flex", alignItems: "flex-start", gap: 10 }}>
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(60,60,67,0.4)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: 1 }}><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
                   <p style={{ fontSize: 13, color: "rgba(60,60,67,0.6)", lineHeight: 1.4 }}>{st.address}</p>
