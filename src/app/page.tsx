@@ -1120,10 +1120,10 @@ export default function Home() {
     </main>
 
       {/* ── LEFT PANELS CONTAINER — desktop only ── */}
-      <div className="hidden md:flex flex-row h-screen shrink-0 gap-2 p-3 z-10 order-first">
+      <div className="hidden md:flex flex-row h-screen shrink-0 p-3 z-10 order-first" style={{ position: "relative", overflow: "visible" }}>
 
         {/* Status sidebar */}
-        <aside className="flex flex-col w-72 h-full overflow-y-auto rounded-2xl" style={{ background: "rgba(245,247,251,0.82)", backdropFilter: "blur(28px) saturate(180%)", WebkitBackdropFilter: "blur(28px) saturate(180%)", border: "1px solid rgba(255,255,255,0.55)", boxShadow: "0 8px 40px rgba(0,0,0,0.13)" }}>
+        <aside className="flex flex-col w-84 h-full overflow-y-auto rounded-2xl" style={{ background: "rgba(245,247,251,0.82)", backdropFilter: "blur(28px) saturate(180%)", WebkitBackdropFilter: "blur(28px) saturate(180%)", border: "1px solid rgba(255,255,255,0.55)", boxShadow: "0 8px 40px rgba(0,0,0,0.13)" }}>
           <div style={{ padding: "20px 20px 32px" }}>
             <div className="p-1 flex items-center rounded-full w-full mb-6" style={{ background: "rgba(60,60,67,0.10)", cursor: "pointer", position: "relative" }} onClick={() => setDistanceFrom(d => d === "mercado" ? "nh" : "mercado")}>
               <div style={{ position: "absolute", top: 4, bottom: 4, left: 4, width: "calc(50% - 4px)", background: "rgba(255,255,255,0.95)", borderRadius: 99, boxShadow: "0 1px 6px rgba(0,0,0,0.10)", transform: distanceFrom === "nh" ? "translateX(100%)" : "translateX(0%)", transition: "transform 0.3s cubic-bezier(0.34, 1.2, 0.64, 1)", pointerEvents: "none" }} />
@@ -1199,7 +1199,7 @@ export default function Home() {
           ];
           const activeFacilities = facilities.filter(f => f.active);
           return (
-            <aside key={selectedStationCode} className="flex flex-col w-72 h-full overflow-y-auto rounded-2xl" style={{ background: "rgba(245,247,251,0.82)", backdropFilter: "blur(28px) saturate(180%)", WebkitBackdropFilter: "blur(28px) saturate(180%)", border: "1px solid rgba(255,255,255,0.55)", boxShadow: "0 8px 40px rgba(0,0,0,0.13)", transform: stationModalOpen ? "translateX(0) scale(1)" : "translateX(-8px) scale(0.97)", opacity: stationModalOpen ? 1 : 0, transition: "transform 0.35s cubic-bezier(0.32,0.72,0,1), opacity 0.25s ease", pointerEvents: stationModalOpen ? "auto" : "none" }}>
+            <aside key={selectedStationCode} className="flex flex-col w-80 overflow-y-auto rounded-2xl" style={{ position: "absolute", left: "calc(100% - 12px + 8px)", top: "12px", bottom: "12px", background: "rgba(245,247,251,0.82)", backdropFilter: "blur(28px) saturate(180%)", WebkitBackdropFilter: "blur(28px) saturate(180%)", border: "1px solid rgba(255,255,255,0.55)", boxShadow: "0 8px 40px rgba(0,0,0,0.13)", transform: stationModalOpen ? "translateX(0) scale(1)" : "translateX(-8px) scale(0.97)", opacity: stationModalOpen ? 1 : 0, transition: "transform 0.35s cubic-bezier(0.32,0.72,0,1), opacity 0.25s ease", pointerEvents: stationModalOpen ? "auto" : "none" }}>
               <div style={{ padding: "20px 20px 40px" }}>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
                   <h2 style={{ fontSize: 20, fontWeight: 700, color: "#1C1C1E" }}>{st.name}</h2>
