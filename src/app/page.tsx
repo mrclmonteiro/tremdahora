@@ -781,7 +781,7 @@ export default function Home() {
         }}
       >
         {/* --- MAPA DA LINHA --- */}
-        <section className="relative w-full max-w-2xl">
+        <section className="relative w-full max-w-2xl md:max-w-3xl">
           <div className="relative mx-auto">
             {/* Linha principal azul Trensurb */}
             <div
