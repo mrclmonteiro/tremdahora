@@ -834,22 +834,34 @@ export default function Home() {
                         <div className="py-3 pl-3">
                           {conn?.integrated ? (
                             <div style={{ position: "relative" }}>
-                            <div style={{ position: "absolute", bottom: "50%", left: -4, pointerEvents: "none" }}>
-                              <svg width="42" height="36" viewBox="0 0 42 36" fill="none" style={{ display: "block", overflow: "visible" }}>
-                              <line x1="0" y1="36" x2="36" y2="4" stroke={conn.color} strokeWidth="3" strokeLinecap="round"/>
-                              <circle cx="36" cy="4" r="5" fill={conn.color} stroke="white" strokeWidth="2"/>
-                              </svg>
-                              <div style={{ position: "absolute", top: 0, left: 56, transform: "translateY(-50%)", whiteSpace: "nowrap" }}>
-                                <div className="text-[10px] font-bold leading-tight" style={{ color: conn.color }}>{conn.label}</div>
-                                {conn.sublabel && <div className="text-[9px] leading-tight" style={{ color: "rgba(60,60,67,0.5)" }}>{conn.sublabel}</div>}
-                                </div>
-                              </div>
-                                <p className="text-xs" style={{ color: "rgba(60,60,67,0.5)" }}>
-                                {distanceFrom === "mercado"
-                                ? `${station.minutesFromMercado} min`
-                                : `${ONE_WAY_TRAVEL_MINUTES - station.minutesFromMercado} min`}
-                               </p>
-                            </div>
+  <div style={{ position: "absolute", bottom: "50%", left: -16, pointerEvents: "none" }}>
+    <svg width="100" height="72" viewBox="0 0 100 72" fill="none" style={{ display: "block", overflow: "visible" }}>
+      {/* segunda bolinha acima da estação */}
+      <circle cx="0" cy="58" r="6" fill={conn.color} stroke="white" strokeWidth="2"/>
+      {/* linha diagonal  */}
+      <line x1="0" y1="52" x2="50" y2="8" stroke={conn.color} strokeWidth="3" strokeLinecap="round"/>
+      {/* bolinha terminal (Salgado Filho) */}
+      <circle cx="50" cy="8" r="5" fill={conn.color} stroke="white" strokeWidth="2"/>
+      {/* seta */}
+      <line x1="50" y1="3" x2="50" y2="-8" stroke={conn.color} strokeWidth="2" strokeLinecap="round"/>
+      <polygon points="50,-14 46,-8 54,-8" fill={conn.color}/>
+      {/* label "Aeromóvel" */}
+      <text x="22" y="36" fontSize="7" fontWeight="700" fill={conn.color}
+        transform="rotate(-42, 22, 36)" textAnchor="middle" letterSpacing="0.4">
+        Aeromóvel
+      </text>
+    </svg>
+    {/* Label "Salgado Filho" */}
+    <div style={{ position: "absolute", top: -10, left: 60, whiteSpace: "nowrap" }}>
+      <span style={{ fontSize: 9, fontWeight: 700, color: "#1C1C1E" }}>Salgado Filho</span>
+    </div>
+  </div>
+  <p className="text-xs" style={{ color: "rgba(60,60,67,0.5)" }}>
+    {distanceFrom === "mercado"
+      ? `${station.minutesFromMercado} min`
+      : `${ONE_WAY_TRAVEL_MINUTES - station.minutesFromMercado} min`}
+  </p>
+</div>
                           ) : conn ? (
                             /* Terminal Hidroviário: badge externo, não integrado */
                             <div className="flex flex-col gap-0.5">
