@@ -836,7 +836,7 @@ export default function Home() {
   <div style={{ position: "relative" }}>
     <svg
       width="30" height="16"
-      style={{ overflow: "visible", position: "absolute", left: -48, top: "50%", transform: "translateY(-50%)", pointerEvents: "none", zIndex: 20, display: "block" }}
+      style={{ overflow: "visible", position: "absolute", left: -48, top: "30%", transform: "translateY(-50%)", pointerEvents: "none", zIndex: 20, display: "block" }}
       fill="none"
     >
       <rect x="-9" y="-9" width="36" height="18" rx="9" fill="white" stroke="#007AFF" strokeWidth="2.5"/>
@@ -851,7 +851,7 @@ export default function Home() {
       </text>
       <text x="98" y="-42" fontSize="9" fontWeight="600" fill="#1C1C1E">Salgado Filho</text>
     </svg>
-    <p className="text-xs" style={{ color: "rgba(60,60,67,0.5)", paddingLeft: 36 }}>
+    <p className="text-xs" style={{ color: "rgba(60,60,67,0.5)" }}>
       {distanceFrom === "mercado"
         ? `${station.minutesFromMercado} min`
         : `${ONE_WAY_TRAVEL_MINUTES - station.minutesFromMercado} min`}
