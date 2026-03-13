@@ -834,7 +834,7 @@ export default function Home() {
                         <div className="py-3 pl-3">
                           {conn?.integrated ? (
                             <div style={{ position: "relative" }}>
-                            <div style={{ position: "absolute", bottom: "50%", left: -16, pointerEvents: "none" }}>
+                            <div style={{ position: "absolute", bottom: "50%", left: -4, pointerEvents: "none" }}>
                               <svg width="42" height="36" viewBox="0 0 42 36" fill="none" style={{ display: "block", overflow: "visible" }}>
                               <line x1="0" y1="36" x2="36" y2="4" stroke={conn.color} strokeWidth="3" strokeLinecap="round"/>
                               <circle cx="36" cy="4" r="5" fill={conn.color} stroke="white" strokeWidth="2"/>
