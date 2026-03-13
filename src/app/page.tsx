@@ -835,7 +835,7 @@ export default function Home() {
                           {conn?.integrated ? (
   <div style={{ position: "relative" }}>
     <svg
-      width="10" height="10"
+      width="200" height="200"
       viewBox="-20 -50 150 60"
       style={{ overflow: "visible", position: "absolute", left: -20, top: "50%", transform: "translateY(-50%)", pointerEvents: "none", zIndex: 20 }}
       fill="none"
