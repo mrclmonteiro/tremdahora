@@ -131,3 +131,55 @@ body {
 .animate-bounce-modal {
   animation: bounce-modal 1.2s cubic-bezier(0.68, -0.55, 0.27, 1.55);
 }
+
+/* ── lg-btn: borda cromática + press feedback ─────────────────────── */
+.lg-btn {
+  cursor: pointer;
+  position: relative;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  will-change: transform;
+  transition: transform 0.35s cubic-bezier(0.34, 1.15, 0.64, 1), filter 0.12s ease;
+}
+.lg-btn:active {
+  transform: scale(1.12);
+  transition: transform 0.09s cubic-bezier(0.33, 1, 0.68, 1), filter 0.06s ease;
+  filter: brightness(1.45);
+}
+.lg-btn::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: transparent;
+  transition: background 0.08s ease;
+  pointer-events: none;
+  z-index: 5;
+}
+.lg-btn:active::after {
+  background: rgba(60,60,67,0.12);
+}
+.lg-btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(135deg,
+    rgba(255, 70, 58, 0.40) 0%,
+    rgba(255,255,255, 0.55) 45%,
+    rgba(80, 120, 255, 0.40) 100%
+  );
+  backdrop-filter: saturate(500%) brightness(1.1);
+  -webkit-backdrop-filter: saturate(500%) brightness(1.1);
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: destination-out;
+  mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  pointer-events: none;
+  z-index: 4;
+}

@@ -230,17 +230,29 @@ function getStationTrainTimes(
     const future = candidates.filter(t => t > minutesNow);
     const lastPast = past.length > 0 ? past[past.length - 1] : null;
     const soonest = future.length > 0 ? future[0] : null;
-    const arriving = (lastPast !== null && minutesNow - lastPast <= 2) || (soonest !== null && soonest - minutesNow <= 1);    if (arriving) {
+
+    const justPassed = lastPast !== null && minutesNow - lastPast <= 2;
+    const aboutToArrive = soonest !== null && soonest - minutesNow <= 1;
+
+    if (justPassed && !aboutToArrive) {
       return {
         last: past.length > 1 ? minutesToHHMM(past[past.length - 2]) : null,
-        next1: lastPast !== null ? minutesToHHMM(lastPast) : null,
+        next1: minutesToHHMM(lastPast!),
         next1Arriving: true,
-        next2: future.length > 0 ? minutesToHHMM(future[0]) : null,
+        next2: soonest ? minutesToHHMM(soonest) : null,
+      };
+    }
+    if (aboutToArrive) {
+      return {
+        last: lastPast ? minutesToHHMM(lastPast) : null,
+        next1: minutesToHHMM(soonest!),
+        next1Arriving: true,
+        next2: future.length > 1 ? minutesToHHMM(future[1]) : null,
       };
     }
     return {
       last: lastPast ? minutesToHHMM(lastPast) : null,
-      next1: future.length > 0 ? minutesToHHMM(future[0]) : null,
+      next1: soonest ? minutesToHHMM(soonest) : null,
       next1Arriving: false,
       next2: future.length > 1 ? minutesToHHMM(future[1]) : null,
     };
@@ -252,7 +264,6 @@ function getStationTrainTimes(
 }
 
 
-// ── Trem Tour ─────────────────────────────────────────────────────────────────
 const TREM_TOUR_STEPS = [
   { msg: "Arraste para cima para conferir o status e os intervalos de partidas entre trens", anchor: "modal" as const },
   { msg: "Escolha entre a visualização dos terminais Mercado e Novo Hamburgo", anchor: "header" as const },
