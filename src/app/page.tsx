@@ -836,8 +836,8 @@ export default function Home() {
   <div style={{ position: "relative" }}>
     <svg
       width="200" height="100"
-      viewBox="-40 -50 150 100"
-      style={{ overflow: "visible", position: "absolute", left: -40, top: "50%", transform: "translateY(-50%)", pointerEvents: "none", zIndex: 20 }}
+      viewBox="-70 -50 150 100"
+      style={{ overflow: "visible", position: "absolute", left: -70, top: "50%", transform: "translateY(-50%)", pointerEvents: "none", zIndex: 20 }}
       fill="none"
     >
       {/* Cápsula azul conectando os dois círculos */}
