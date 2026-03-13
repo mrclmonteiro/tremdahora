@@ -1223,7 +1223,31 @@ export default function Home() {
                   })}
                 </div>
                 )}
-                
+                {conn && (
+  <div style={{ marginBottom: 16 }}>
+    <p className="text-base font-semibold text-slate-500" style={{ marginBottom: 8 }}>Conexão disponível</p>
+    {conn.integrated ? (
+      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+        <svg width="80" height="24" viewBox="0 0 80 24" fill="none" style={{ flexShrink: 0 }}>
+          <rect x="0" y="1" width="52" height="22" rx="11" fill="white" stroke="#007AFF" strokeWidth="2.5"/>
+          <circle cx="11" cy="12" r="8" fill="#FF3B30" stroke="white" strokeWidth="1.5"/>
+          <circle cx="41" cy="12" r="8" fill="#FF3B30" stroke="white" strokeWidth="1.5"/>
+          <text x="41" y="16" fontSize="10" textAnchor="middle" fill="white">✈</text>
+        </svg>
+        <div>
+          <div style={{ fontSize: 13, fontWeight: 700, color: conn.color }}>{conn.label}</div>
+          {conn.sublabel && <div style={{ fontSize: 12, color: "rgba(60,60,67,0.5)", marginTop: 2 }}>{conn.sublabel}</div>}
+        </div>
+      </div>
+    ) : (
+      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        <div style={{ width: 8, height: 8, borderRadius: "50%", background: conn.color, flexShrink: 0 }} />
+        <span style={{ fontSize: 13, fontWeight: 600, color: conn.color }}>{conn.label}</span>
+        {conn.sublabel && <span style={{ fontSize: 12, color: "rgba(60,60,67,0.5)" }}>· {conn.sublabel}</span>}
+      </div>
+    )}
+  </div>
+)}
                 <div style={{ marginBottom: 16, display: "flex", alignItems: "flex-start", gap: 10 }}>
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(60,60,67,0.4)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: 1 }}><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
                   <p style={{ fontSize: 13, color: "rgba(60,60,67,0.6)", lineHeight: 1.4 }}>{st.address}</p>
