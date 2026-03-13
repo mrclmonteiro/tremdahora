@@ -298,23 +298,31 @@ function TremTour({
   sidebarRef: React.RefObject<HTMLElement | null>
   toggleRef: React.RefObject<HTMLDivElement | null>
 }) {
+  const [isDesktop, setIsDesktop] = React.useState(false)
   const [visible, setVisible] = React.useState(false)
   const [bubblePos, setBubblePos] = React.useState<{
     left: number; top?: number; bottom?: number; width: number
     tailX: number; tailSide: "top" | "bottom"
   } | null>(null)
 
+  // Detect desktop on mount
+  React.useEffect(() => {
+    setIsDesktop(window.innerWidth >= 768)
+  }, [])
+
   React.useEffect(() => {
     let raf1 = 0, raf2 = 0
     let mounted = true
     setVisible(false)
+    setBubblePos(null)
     raf1 = requestAnimationFrame(() => {
       if (!mounted) return
       const W = window.innerWidth
-      const isDesktop = W >= 768
-      const BW = Math.min(260, W - 32)
-      const steps = isDesktop ? TREM_TOUR_STEPS_DESKTOP : TREM_TOUR_STEPS_MOBILE
-      const anchor: TremTourAnchor = steps[step]?.anchor
+      const desktop = W >= 768
+      setIsDesktop(desktop)
+      const BW = 260
+      const steps = desktop ? TREM_TOUR_STEPS_DESKTOP : TREM_TOUR_STEPS_MOBILE
+      const anchor = steps[step]?.anchor
       let pos: typeof bubblePos = null
 
       if (anchor === "modal" && modalRef.current) {
@@ -326,28 +334,34 @@ function TremTour({
         const bl = Math.max(16, W / 2 - BW / 2)
         pos = { left: bl, top: r.bottom + 12, width: BW, tailX: W / 2 - bl - 8, tailSide: "top" }
       } else if (anchor === "sidebar" && sidebarRef.current) {
+        // Bubble below the top of sidebar, in the map area
         const r = sidebarRef.current.getBoundingClientRect()
-        const bl = r.right + 16
-        pos = { left: bl, top: r.top + 16, width: BW, tailX: -18, tailSide: "top" }
+        const bl = r.right + 20
+        const safeLeft = Math.min(bl, W - BW - 16)
+        pos = { left: safeLeft, top: r.top + 20, width: BW, tailX: 16, tailSide: "top" }
       } else if (anchor === "toggle" && toggleRef.current) {
         const r = toggleRef.current.getBoundingClientRect()
-        const bl = r.right + 16
-        pos = { left: bl, top: r.top - 8, width: BW, tailX: -18, tailSide: "top" }
+        const bl = r.right + 20
+        const safeLeft = Math.min(bl, W - BW - 16)
+        pos = { left: safeLeft, top: r.top + r.height / 2 - 20, width: BW, tailX: 16, tailSide: "top" }
       } else if (anchor === "station" && stationRef.current) {
         const r = stationRef.current.getBoundingClientRect()
-        const bl = isDesktop ? r.left + 32 : Math.max(16, W / 2 - BW / 2)
-        pos = { left: bl, top: r.bottom + 10, width: BW, tailX: isDesktop ? 24 : W / 2 - bl - 8, tailSide: "top" }
+        if (desktop) {
+          const bl = Math.min(r.left + 40, W - BW - 16)
+          pos = { left: bl, top: r.bottom + 10, width: BW, tailX: 24, tailSide: "top" }
+        } else {
+          const bl = Math.max(16, W / 2 - BW / 2)
+          pos = { left: bl, top: r.bottom + 10, width: BW, tailX: W / 2 - bl - 8, tailSide: "top" }
+        }
       }
 
       if (mounted) setBubblePos(pos)
       raf2 = requestAnimationFrame(() => { if (mounted) setVisible(true) })
     })
     return () => { mounted = false; cancelAnimationFrame(raf1); cancelAnimationFrame(raf2) }
-  }, [step]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [step, isDesktop]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  const W2 = typeof window !== "undefined" ? window.innerWidth : 0
-  const isDesktop2 = W2 >= 768
-  const activeSteps = isDesktop2 ? TREM_TOUR_STEPS_DESKTOP : TREM_TOUR_STEPS_MOBILE
+  const activeSteps = isDesktop ? TREM_TOUR_STEPS_DESKTOP : TREM_TOUR_STEPS_MOBILE
   if (!bubblePos) return null
   const isLast = step === activeSteps.length - 1
 
@@ -393,7 +407,7 @@ function TremTour({
           left: bubblePos.tailX,
         }} />
 
-        <p style={{ margin: 0, marginBottom: 12 }}>{activeSteps[step].msg}</p>
+        <p style={{ margin: 0, marginBottom: 12 }}>{activeSteps[step]?.msg}</p>
 
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div style={{ display: "flex", gap: 4 }}>
