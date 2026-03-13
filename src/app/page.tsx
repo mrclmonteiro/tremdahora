@@ -835,29 +835,25 @@ export default function Home() {
                           {conn?.integrated ? (
   <div style={{ position: "relative" }}>
     <svg
-      width="200" height="100"
-      viewBox="-150 -50 150 100"
-      style={{ overflow: "visible", position: "absolute", left: -150, top: "50%", transform: "translateY(-50%)", pointerEvents: "none", zIndex: 20 }}
+      width="180" height="16"
+      style={{ overflow: "visible", display: "block", marginLeft: -48, pointerEvents: "none", zIndex: 20, position: "relative" }}
       fill="none"
     >
-      {/* Cápsula azul conectando os dois círculos */}
+      {/* Cápsula azul */}
       <rect x="-9" y="-9" width="36" height="18" rx="9" fill="white" stroke="#007AFF" strokeWidth="2.5"/>
-      {/* Dot esquerdo — estação (sobrepõe a bolinha vermelha existente) */}
+      {/* Bolinha esquerda — estação */}
       <circle cx="0" cy="0" r="7" fill="#FF3B30" stroke="white" strokeWidth="1.5"/>
-      {/* Dot direito — Aeromóvel */}
+      {/* Bolinha direita — Aeromóvel */}
       <circle cx="18" cy="0" r="7" fill="#FF3B30" stroke="white" strokeWidth="1.5"/>
-      {/* Ícone simples de avião no dot do Aeromóvel */}
       <text x="18" y="3.5" fontSize="8" textAnchor="middle" fill="white">✈</text>
-      {/* Linha diagonal para Salgado Filho */}
+      {/* Linha diagonal */}
       <line x1="24" y1="-5" x2="86" y2="-46" stroke={conn.color} strokeWidth="3" strokeLinecap="round"/>
-      {/* Bolinha terminal */}
+      {/* Bolinha Salgado Filho */}
       <circle cx="86" cy="-46" r="7" fill={conn.color} stroke="white" strokeWidth="2"/>
-      {/* Label Aeromóvel — path alinhado com a linha */}
+      {/* Label Aeromóvel ao longo da linha */}
       <path id="aero-path" d="M 28,-8 L 84,-44" fill="none"/>
       <text fontSize="8" fontWeight="700" fill={conn.color}>
-        <textPath href="#aero-path" startOffset="10%" stroke="rgba(245,247,251,0.9)" strokeWidth="3" paintOrder="stroke">
-          Aeromóvel
-        </textPath>
+        <textPath href="#aero-path" startOffset="10%" stroke="rgba(245,247,251,0.9)" strokeWidth="3" paintOrder="stroke">Aeromóvel</textPath>
       </text>
       {/* Label Salgado Filho */}
       <text x="98" y="-42" fontSize="9" fontWeight="600" fill="#1C1C1E">Salgado Filho</text>
