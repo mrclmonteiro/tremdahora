@@ -1207,14 +1207,14 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Footer — colado no fundo da sidebar */}
+          {/* footer */}
           <div style={{ padding: "16px 20px 20px", borderTop: "1px solid rgba(60,60,67,0.09)", background: "rgba(60,60,67,0.04)" }}>
-            <p style={{ fontSize: 10, color: "rgba(60,60,67,0.3)", lineHeight: 1.5, marginBottom: 12 }}>
-              O <span style={{ color: "rgba(60,60,67,0.65)" }}>Trem da Hora</span> é um app desenvolvido por{" "}
-              <span style={{ color: "rgba(60,60,67,0.65)" }}>Marcelo Monteiro</span> com auxílio da{" "}
-              <span style={{ color: "rgba(60,60,67,0.65)" }}>Claude</span>.
+            <p style={{ fontSize: 10, color: "#3c3c43af", lineHeight: 1.5, marginBottom: 12 }}>
+              O <span style={{ color: "rgba(60, 60, 67, 0.79)" }}>Trem da Hora</span> é um app desenvolvido por{" "}
+              <span style={{ color: "rgba(60, 60, 67, 0.79)" }}>Marcelo Monteiro</span> com auxílio da{" "}
+              <span style={{ color: "rgba(60, 60, 67, 0.79)" }}>Claude</span>.
               Agradecimento especial a{" "}
-              <a href="https://www.linkedin.com/in/pchgab/" target="_blank" rel="noopener noreferrer" style={{ color: "rgba(60,60,67,0.65)", textDecoration: "none", borderBottom: "1px solid rgba(60,60,67,0.25)" }}>Gabrielle Pacheco</a>
+              <a href="https://www.linkedin.com/in/pchgab/" target="_blank" rel="noopener noreferrer" style={{ color: "rgba(60, 60, 67, 0.79)", textDecoration: "none", borderBottom: "1px solid rgba(60,60,67,0.25)" }}>Gabrielle Pacheco</a>
               , que teve a brilhante ideia de fazer um nome <i>bem da hora</i> para o app.
             </p>
             <div className="flex items-center justify-between">
@@ -1229,7 +1229,7 @@ export default function Home() {
                 ))}
               </div>
               <div className="flex items-center gap-2">
-                <span style={{ fontSize: 11, color: "rgba(60,60,67,0.4)" }}>Gostou?</span>
+                <span style={{ fontSize: 11, color: "#3c3c43af" }}>Gostou?</span>
                 <a href="https://www.buymeacoffee.com/mrclmonteiro" target="_blank" rel="noopener noreferrer"
                   style={{ display: "inline-flex", alignItems: "center", gap: 5, background: "#3c3c43", border: "1px solid rgba(255,255,255,0.15)", borderRadius: 99, padding: "5px 12px", textDecoration: "none" }}>
                   <span style={{ fontSize: 13 }}>☕</span>
