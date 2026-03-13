@@ -673,6 +673,9 @@ export default function Home() {
     setDragOffset(0);
   }
 
+  const isClosed = status.situation.toLowerCase().includes("fechado");
+  const isStationsClosing = !isClosed && new Date().getHours() >= 23;
+
   return (
     <>
     <main
@@ -952,26 +955,34 @@ export default function Home() {
             <div className="flex items-center gap-2.5 min-w-0 flex-1">
               <span style={{ position: "relative", display: "inline-flex", width: 12, height: 12, flexShrink: 0 }}>
                 <span style={{
-                  position: "absolute",
-                  inset: 0,
-                  borderRadius: "50%",
-                  backgroundColor: status.situation.toLowerCase().includes("normal") ? "#34C759" : "#FF9500",
-                  opacity: 0.5,
-                  animation: "ping 1.5s cubic-bezier(0,0,0.2,1) infinite",
+                position: "absolute",
+                inset: 0,
+                borderRadius: "50%",
+                backgroundColor: isClosed ? "#8E8E93" : status.situation.toLowerCase().includes("normal") ? "#34C759" : "#FF9500",
+                opacity: 0.5,
+                animation: isClosed ? "none" : "ping 1.5s cubic-bezier(0,0,0.2,1) infinite",
                 }} />
                 <span style={{
-                  position: "relative",
-                  display: "inline-block",
-                  width: 12,
-                  height: 12,
-                  borderRadius: "50%",
-                  backgroundColor: status.situation.toLowerCase().includes("normal") ? "#34C759" : "#FF9500",
-                  boxShadow: status.situation.toLowerCase().includes("normal")
-                    ? "0 0 8px rgba(52,199,89,0.6)"
-                    : "0 0 8px rgba(255,149,0,0.6)",
+                position: "relative",
+                display: "inline-block",
+                width: 12,
+                height: 12,
+                borderRadius: "50%",
+                backgroundColor: isClosed ? "#8E8E93" : status.situation.toLowerCase().includes("normal") ? "#34C759" : "#FF9500",
+                boxShadow: isClosed ? "none" : status.situation.toLowerCase().includes("normal") ? "0 0 8px rgba(52,199,89,0.6)" : "0 0 8px rgba(255,149,0,0.6)",
                 }} />
               </span>
               <h2 className="text-xl font-semibold tracking-tight text-slate-900 leading-tight">{status.situation}</h2>
+                {isStationsClosing && (
+                <p style={{ fontSize: 12, color: "#FF9500", fontWeight: 600, marginTop: 4 }}>
+                Estações fechadas. Últimos trens em circulação.
+                </p>
+                )}
+                {isClosed && (
+                <p style={{ fontSize: 12, color: "rgba(60,60,67,0.45)", fontWeight: 500, marginTop: 4 }}>
+                Operação encerrada. Retorno às 5h.
+                </p>
+                )}
             </div>
 
           </div>
@@ -1000,11 +1011,14 @@ export default function Home() {
                 )}
               </div>
             )}
+            
             {/* Motivo */}
-            <div>
+            {!isClosed && (
+              <div>
               <p className="text-base font-semibold text-slate-500">Motivo</p>
               <p className="mt-0.5 text-sm leading-relaxed text-slate-700">{status.reason}</p>
-            </div>
+              </div>
+            )}
 
             {/* Trecho afetado */}
             {status.trechos.length > 0 && (
@@ -1163,15 +1177,21 @@ export default function Home() {
                 <div style={{ width: 36, flexShrink: 0 }} />
               </div>
               <div style={{ overflowY: "auto", flex: 1, padding: "8px 20px 40px" }}>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 20 }}>
-                  {([
-  { dir: "northbound" as const, label: "Novo Hamburgo", color: "#FF3B30" },
-  { dir: "southbound" as const, label: "Mercado", color: "#007AFF" },
-] as const).filter(({ dir }) => {
-  if (st.code === "NH") return dir === "southbound";
-  if (st.code === "MR") return dir === "northbound";
-  return true;
-}).map(({ dir, label, color }) => {
+              {isClosed ? (
+              <div style={{ marginBottom: 20, padding: "16px", borderRadius: 16, background: "rgba(60,60,67,0.06)", textAlign: "center" }}>
+              <p style={{ fontSize: 14, fontWeight: 600, color: "rgba(60,60,67,0.45)" }}>Operação encerrada.</p>
+              <p style={{ fontSize: 13, color: "rgba(60,60,67,0.35)", marginTop: 4 }}>Retorno às 5h.</p>
+              </div>
+              ) : (
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 20 }}>
+              {([
+              { dir: "northbound" as const, label: "Novo Hamburgo", color: "#FF3B30" },
+              { dir: "southbound" as const, label: "Mercado", color: "#007AFF" },
+              ] as const).filter(({ dir }) => {
+              if (st.code === "NH") return dir === "southbound";
+              if (st.code === "MR") return dir === "northbound";
+              return true;
+              }).map(({ dir, label, color }) => {
                     const t = times[dir];
                     return (
                       <div key={dir} style={{ background: "rgba(60,60,67,0.06)", borderRadius: 16, padding: "14px 14px 12px" }}>
@@ -1195,6 +1215,7 @@ export default function Home() {
                     );
                   })}
                 </div>
+                )}
                 {conn && (
                   <div style={{ marginBottom: 16, padding: "10px 14px", borderRadius: 12, border: `1px solid ${conn.color}40`, background: `${conn.color}10`, display: "flex", alignItems: "center", gap: 8 }}>
                     <div style={{ width: 8, height: 8, borderRadius: "50%", background: conn.color, flexShrink: 0 }} />
