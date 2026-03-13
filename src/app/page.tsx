@@ -480,6 +480,9 @@ export default function Home() {
   const sidebarRef = useRef<HTMLElement>(null);
   const toggleRef = useRef<HTMLDivElement>(null);
   const [tourStep, setTourStep] = useState(-1);
+  const [showDNITAlert, setShowDNITAlert] = useState(() => {
+    try { return !localStorage.getItem("dnit_alert_15mar_seen") } catch { return true }
+  });
   const [headwayPeriods, setHeadwayPeriods] = useState<HeadwayPeriod[]>([]);
     useEffect(() => {
     async function fetchHistory() {
@@ -1207,8 +1210,11 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Footer — colado no fundo da sidebar */}
+          {/* footer */}
           <div style={{ padding: "16px 20px 20px", borderTop: "1px solid rgba(60,60,67,0.09)", background: "rgba(60,60,67,0.04)" }}>
+            <p style={{ fontSize: 10, color: "rgba(60,60,67,0.3)", lineHeight: 1.5, marginBottom: 12 }}>
+            A posição dos trens é estimada com base nos horários oficiais da Trensurb e pode não refletir a localização exata em tempo real. Dados operacionais fornecidos pela própria Trensurb.
+          </p>
             <p style={{ fontSize: 10, color: "rgba(60,60,67,0.3)", lineHeight: 1.5, marginBottom: 12 }}>
               O <span style={{ color: "rgba(60,60,67,0.65)" }}>Trem da Hora</span> é um app desenvolvido por{" "}
               <span style={{ color: "rgba(60,60,67,0.65)" }}>Marcelo Monteiro</span> com auxílio da{" "}
@@ -1488,6 +1494,103 @@ export default function Home() {
           </div>
         );
       })()}
+      {/* ── ALERTA DNIT domingo 15/03 ── */}
+      {showDNITAlert && (
+        <div
+          style={{
+            position: "fixed", inset: 0, zIndex: 300,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            padding: "24px",
+            background: "rgba(0,0,0,0.25)",
+            backdropFilter: "blur(20px) saturate(180%)",
+            WebkitBackdropFilter: "blur(20px) saturate(180%)",
+          }}
+        >
+          <div style={{
+            background: "rgba(255,255,255,0.88)",
+            backdropFilter: "blur(40px) saturate(200%)",
+            WebkitBackdropFilter: "blur(40px) saturate(200%)",
+            border: "1px solid rgba(255,255,255,0.75)",
+            boxShadow: "0 24px 80px rgba(0,0,0,0.18), inset 0 1px 0 rgba(255,255,255,0.9)",
+            borderRadius: 28,
+            padding: "28px 24px 24px",
+            maxWidth: 340,
+            width: "100%",
+            textAlign: "center",
+          }}>
+            {/* Ícone */}
+            <div style={{ marginBottom: 16, display: "flex", justifyContent: "center" }}>
+              <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+                <circle cx="24" cy="24" r="24" fill="rgba(255,149,0,0.12)"/>
+                <circle cx="24" cy="24" r="18" fill="rgba(255,149,0,0.18)"/>
+                <path d="M24 14v13" stroke="#FF9500" strokeWidth="2.8" strokeLinecap="round"/>
+                <circle cx="24" cy="33" r="1.8" fill="#FF9500"/>
+              </svg>
+            </div>
+
+            {/* Título */}
+            <h2 style={{ fontSize: 17, fontWeight: 700, color: "#1C1C1E", margin: 0, marginBottom: 10, letterSpacing: "-0.2px" }}>
+              Alteração na operação
+            </h2>
+
+            {/* Texto */}
+            <p style={{ fontSize: 14, color: "rgba(60,60,67,0.75)", lineHeight: 1.55, margin: 0, marginBottom: 20 }}>
+              Neste domingo, a Trensurb vai operar com alterações devido a uma obra do DNIT. Os trens partirão do terminal Mercado e seguirão apenas até a estação Mathias Velho, de onde o trajeto será complementado por um ônibus sem custo adicional.{" "}
+              <a
+                href="https://www.gov.br/trensurb/pt-br/assuntos/noticias/obras-do-dnit-em-viaduto-sobre-a-via-da-trensurb-causam-alteracoes-na-operacao-do-metro-no-domingo-15"
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ color: "#007AFF", textDecoration: "none", fontWeight: 600 }}
+              >
+                Confira as informações completas.
+              </a>
+            </p>
+
+            {/* Botão OK */}
+            <button
+              onClick={() => {
+                try { localStorage.setItem("dnit_alert_15mar_seen", "1") } catch {}
+                setShowDNITAlert(false)
+              }}
+              onMouseDown={e => {
+                e.currentTarget.style.transform = "scale(1.06)"
+                e.currentTarget.style.filter = "brightness(1.15)"
+              }}
+              onMouseUp={e => {
+                e.currentTarget.style.transform = "scale(1)"
+                e.currentTarget.style.filter = "brightness(1)"
+              }}
+              onTouchStart={e => {
+                e.currentTarget.style.transform = "scale(1.06)"
+                e.currentTarget.style.filter = "brightness(1.15)"
+              }}
+              onTouchEnd={e => {
+                e.currentTarget.style.transform = "scale(1)"
+                e.currentTarget.style.filter = "brightness(1)"
+                try { localStorage.setItem("dnit_alert_15mar_seen", "1") } catch {}
+                setShowDNITAlert(false)
+              }}
+              style={{
+                width: "100%",
+                padding: "14px",
+                background: "#007AFF",
+                color: "white",
+                border: "none",
+                borderRadius: 99,
+                fontSize: 16,
+                fontWeight: 700,
+                cursor: "pointer",
+                boxShadow: "0 4px 16px rgba(0,122,255,0.35)",
+                transition: "transform 0.15s cubic-bezier(0.34,1.56,0.64,1), filter 0.1s ease",
+                letterSpacing: "-0.1px",
+              }}
+            >
+              OK
+            </button>
+          </div>
+        </div>
+      )}
+
       {tourStep >= 0 && (
         <TremTour
           step={tourStep}
