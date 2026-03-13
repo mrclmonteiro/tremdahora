@@ -831,12 +831,12 @@ export default function Home() {
                           />
                         </div>
                         {/* Minutos + branch de conexão */}
-                        <div className="py-3 pl-3">
+                        <div className="py-3 pl-8">
                           {conn?.integrated ? (
   <div style={{ position: "relative" }}>
     <svg
-      width="200" height="200"
-      viewBox="-20 -50 150 60"
+      width="200" height="100"
+      viewBox="-20 -50 150 100"
       style={{ overflow: "visible", position: "absolute", left: -20, top: "50%", transform: "translateY(-50%)", pointerEvents: "none", zIndex: 20 }}
       fill="none"
     >
