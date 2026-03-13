@@ -676,10 +676,10 @@ export default function Home() {
   const isStationsClosing = !isClosed && new Date().getHours() >= 23;
 
   return (
-    <>
+    <div className="md:flex md:flex-row md:h-screen md:overflow-hidden">
     <main
       suppressHydrationWarning
-      className="relative min-h-[100dvh] w-full bg-transparent text-slate-900"
+      className="relative min-h-[100dvh] w-full bg-transparent text-slate-900 md:flex-1 md:overflow-y-auto md:min-h-0 md:h-screen"
       style={{
         paddingTop: "env(safe-area-inset-top)",
         paddingBottom: "env(safe-area-inset-bottom)",
@@ -688,9 +688,10 @@ export default function Home() {
         userSelect: "none",
       }}
     >
-      {/* Header fixo estilo goes-to */}
+      {/* Header fixo estilo goes-to — hidden no desktop */}
       {/* Header fixo padrão goes-to */}
       <div
+        className="md:hidden"
         style={{
           position: "fixed",
           left: 0,
@@ -913,10 +914,10 @@ export default function Home() {
         </section>
       </div>
 
-      {/* Bottom modal fixo, estilo goes-to */}
+      {/* Bottom modal fixo, estilo goes-to — hidden no desktop */}
       <div
         ref={modalRef}
-        className="fixed left-0 right-0 bottom-0 z-50 rounded-t-3xl"
+        className="md:hidden fixed left-0 right-0 bottom-0 z-50 rounded-t-3xl"
         style={{
           transform: isDragging
             ? `translateY(calc(100% - ${dragBaseRef.current + dragOffset}px))`
@@ -1118,7 +1119,248 @@ export default function Home() {
       </div>
     </main>
 
+      {/* ── SIDEBAR STATUS — desktop only ── */}
+      <aside className="hidden md:flex flex-col w-80 shrink-0 h-screen overflow-y-auto order-first"
+        style={{
+          background: "rgba(245,247,251,0.78)",
+          backdropFilter: "blur(28px) saturate(180%)",
+          WebkitBackdropFilter: "blur(28px) saturate(180%)",
+          borderRight: "1px solid rgba(255,255,255,0.5)",
+          boxShadow: "2px 0 32px rgba(0,0,0,0.08)",
+        }}
+      >
+        <div style={{ padding: "max(env(safe-area-inset-top), 32px) 20px 32px" }}>
+          {/* Toggle NH/Mercado */}
+          <div className="p-1 flex items-center rounded-full w-full mb-6"
+            style={{ background: "rgba(60,60,67,0.10)", cursor: "pointer", position: "relative" }}
+            onClick={() => setDistanceFrom(d => d === "mercado" ? "nh" : "mercado")}
+          >
+            <div style={{ position: "absolute", top: 4, bottom: 4, left: 4, width: "calc(50% - 4px)", background: "rgba(255,255,255,0.95)", borderRadius: 99, boxShadow: "0 1px 6px rgba(0,0,0,0.10)", transform: distanceFrom === "nh" ? "translateX(100%)" : "translateX(0%)", transition: "transform 0.3s cubic-bezier(0.34, 1.2, 0.64, 1)", pointerEvents: "none" }} />
+            <span className="flex-1 text-center text-sm py-2 font-semibold rounded-full relative z-10 transition-colors duration-200" style={{ color: distanceFrom === "mercado" ? "#1C1C1E" : "rgba(60,60,67,0.45)" }}>↓ Mercado</span>
+            <span className="flex-1 text-center text-sm py-2 font-semibold rounded-full relative z-10 transition-colors duration-200" style={{ color: distanceFrom === "nh" ? "#1C1C1E" : "rgba(60,60,67,0.45)" }}>↑ Novo Hamburgo</span>
+          </div>
+
+          {/* Status */}
+          <div className="flex items-center gap-2.5 mb-2">
+            <span style={{ position: "relative", display: "inline-flex", width: 12, height: 12, flexShrink: 0 }}>
+              <span style={{ position: "absolute", inset: 0, borderRadius: "50%", backgroundColor: isClosed ? "#8E8E93" : status.situation.toLowerCase().includes("normal") ? "#34C759" : "#FF9500", opacity: 0.5, animation: isClosed ? "none" : "ping 1.5s cubic-bezier(0,0,0.2,1) infinite" }} />
+              <span style={{ position: "relative", display: "inline-block", width: 12, height: 12, borderRadius: "50%", backgroundColor: isClosed ? "#8E8E93" : status.situation.toLowerCase().includes("normal") ? "#34C759" : "#FF9500", boxShadow: isClosed ? "none" : status.situation.toLowerCase().includes("normal") ? "0 0 8px rgba(52,199,89,0.6)" : "0 0 8px rgba(255,149,0,0.6)" }} />
+            </span>
+            <h2 className="text-xl font-semibold tracking-tight text-slate-900 leading-tight">{status.situation}</h2>
+          </div>
+          {isStationsClosing && <p style={{ fontSize: 12, color: "#FF9500", fontWeight: 600, marginBottom: 12 }}>Estações fechadas. Últimos trens em circulação.</p>}
+          {isClosed && <p style={{ fontSize: 12, color: "rgba(60,60,67,0.45)", fontWeight: 500, marginBottom: 12 }}>Operação encerrada. Retorno às 5h.</p>}
+
+          <div className="flex flex-col gap-4 mt-4">
+            {(status.intervalNHtoMercado ?? status.currentIntervalMinutes) !== null && (
+              <div className="flex flex-col gap-1.5">
+                <p className="text-base font-semibold text-slate-500">Intervalo entre partidas</p>
+                {status.intervalNHtoMercado !== null && status.intervalMercadotoNH !== null && status.intervalNHtoMercado !== status.intervalMercadotoNH ? (
+                  <>
+                    <div className="flex items-center gap-2">
+                      <span className="text-base font-semibold text-slate-900">{status.intervalNHtoMercado} min</span>
+                      <span className="text-[10px] font-bold px-1.5 py-0.5 rounded" style={{ background: "#FF3B30", color: "white", letterSpacing: "0.06em" }}>NOVO HAMBURGO</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-base font-semibold text-slate-900">{status.intervalMercadotoNH} min</span>
+                      <span className="text-[10px] font-bold px-1.5 py-0.5 rounded" style={{ background: "#007AFF", color: "white", letterSpacing: "0.06em" }}>MERCADO</span>
+                    </div>
+                  </>
+                ) : (
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-base font-semibold text-slate-900">{status.intervalNHtoMercado ?? status.currentIntervalMinutes} min</span>
+                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded" style={{ background: "#FF3B30", color: "white", letterSpacing: "0.06em" }}>NOVO HAMBURGO</span>
+                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded" style={{ background: "#007AFF", color: "white", letterSpacing: "0.06em" }}>MERCADO</span>
+                  </div>
+                )}
+              </div>
+            )}
+            {!isClosed && (
+              <div>
+                <p className="text-base font-semibold text-slate-500">Motivo</p>
+                <p className="mt-0.5 text-sm leading-relaxed text-slate-700">{status.reason}</p>
+              </div>
+            )}
+            {status.trechos.length > 0 && (
+              <div>
+                <p className="text-base font-semibold text-slate-500">Trecho afetado</p>
+                {status.trechos.map((t, i) => (
+                  <p key={i} className="mt-0.5 text-sm text-slate-700"><span style={{ color: "#FF9500" }}>● </span>{t.estacao1} → {t.estacao2}</p>
+                ))}
+              </div>
+            )}
+            {status.aeromovel && (
+              <div>
+                <h3 className="mb-2 mt-1 text-base font-semibold text-slate-800">Aeromóvel</h3>
+                <div className="flex items-center gap-2">
+                  <span style={{ display: "inline-block", width: 8, height: 8, borderRadius: "50%", flexShrink: 0, backgroundColor: status.aeromovel.situation.toLowerCase().includes("normal") ? "#34C759" : "#FF3B30" }} />
+                  <p className="text-base font-semibold text-slate-500">Situação</p>
+                </div>
+                <p className="mt-0.5 text-sm text-slate-700">{status.aeromovel.situation}</p>
+                {status.aeromovel.reason && <p className="mt-0.5 text-sm text-slate-700">{status.aeromovel.reason}</p>}
+              </div>
+            )}
+          </div>
+
+          {/* Footer */}
+          <div style={{ marginTop: 32, paddingTop: 16, borderTop: "1px solid rgba(60,60,67,0.1)" }}>
+            <p style={{ fontSize: 10, color: "rgba(60,60,67,0.3)", lineHeight: 1.5, marginBottom: 12 }}>
+              O <span style={{ color: "rgba(60,60,67,0.65)" }}>Trem da Hora</span> é um app desenvolvido por{" "}
+              <span style={{ color: "rgba(60,60,67,0.65)" }}>Marcelo Monteiro</span> com auxílio da{" "}
+              <span style={{ color: "rgba(60,60,67,0.65)" }}>Claude</span>.
+              Agradecimento especial a <a href="https://www.linkedin.com/in/pchgab/" target="_blank" rel="noopener noreferrer" style={{ color: "rgba(60,60,67,0.65)", textDecoration: "none", borderBottom: "1px solid rgba(60,60,67,0.25)" }}>Gabrielle Pacheco</a>, que teve a brilhante ideia de fazer um nome <i>bem da hora</i> para o app.
+            </p>
+            <div className="flex gap-3 items-center flex-wrap">
+              {[
+                { href: "https://x.com/mrclmonteiro", label: "X", svg: <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.746l7.73-8.835L1.254 2.25H8.08l4.26 5.636zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg> },
+                { href: "https://www.instagram.com/mrclmonteiro/", label: "Instagram", svg: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 11.37A4 4 0 1112.63 8 4 4 0 0116 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg> },
+                { href: "https://github.com/mrclmonteiro/tremdahora", label: "GitHub", svg: <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.477 2 2 6.477 2 12c0 4.42 2.865 8.166 6.839 9.489.5.092.682-.217.682-.482 0-.237-.008-.866-.013-1.7-2.782.603-3.369-1.342-3.369-1.342-.454-1.155-1.11-1.462-1.11-1.462-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.578 9.578 0 0112 6.836c.85.004 1.705.114 2.504.336 1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.202 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.743 0 .267.18.578.688.48C19.138 20.163 22 16.418 22 12c0-5.523-4.477-10-10-10z"/></svg> },
+              ].map(({ href, label, svg }) => (
+                <a key={label} href={href} target="_blank" rel="noopener noreferrer" style={{ color: "rgba(60,60,67,0.35)", lineHeight: 0 }}>{svg}</a>
+              ))}
+              <a href="https://www.buymeacoffee.com/mrclmonteiro" target="_blank" rel="noopener noreferrer"
+                style={{ display: "inline-flex", alignItems: "center", gap: 5, background: "#3c3c43", border: "1px solid rgba(255,255,255,0.15)", borderRadius: 99, padding: "4px 10px", textDecoration: "none" }}>
+                <span style={{ fontSize: 11 }}>☕</span>
+                <span style={{ fontSize: 10, fontWeight: 600, color: "white" }}>Me apoia</span>
+              </a>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      {/* ── STATION PANEL — desktop only ── */}
       {selectedStationCode && (() => {
+        const st = STATIONS.find(s => s.code === selectedStationCode)!;
+        const conn = CONNECTIONS[selectedStationCode];
+        const times = getStationTrainTimes(st.minutesFromMercado, now, headwayPeriods, headwaySouth, headwayNorth);
+        const facilities: { label: string; active: boolean }[] = [
+          { label: "Escada rolante", active: st.escadaRolante },
+          { label: "Elevador", active: st.elevador },
+          { label: "Biblioteca", active: st.biblioteca },
+          { label: "Bicicletário", active: st.bicicletario },
+          { label: "Caixa eletrônico", active: st.caixaEletronico },
+          { label: "Farmácia", active: st.farmacia },
+        ];
+        const activeFacilities = facilities.filter(f => f.active);
+        return (
+          <aside
+            key={selectedStationCode}
+            className="hidden md:flex flex-col w-80 shrink-0 h-screen overflow-y-auto"
+            style={{
+              background: "rgba(245,247,251,0.72)",
+              backdropFilter: "blur(28px) saturate(180%)",
+              WebkitBackdropFilter: "blur(28px) saturate(180%)",
+              borderRight: "1px solid rgba(255,255,255,0.45)",
+              boxShadow: "2px 0 32px rgba(0,0,0,0.07)",
+              transform: stationModalOpen ? "translateX(0)" : "translateX(-100%)",
+              transition: "transform 0.4s cubic-bezier(0.32, 0.72, 0, 1)",
+            }}
+          >
+            <div style={{ padding: "max(env(safe-area-inset-top), 32px) 20px 40px" }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
+                <h2 style={{ fontSize: 20, fontWeight: 700, color: "#1C1C1E" }}>{st.name}</h2>
+                <button onClick={closeStationModal} style={{ width: 32, height: 32, borderRadius: "50%", background: "rgba(60,60,67,0.1)", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M18 6L6 18M6 6L18 18" stroke="rgba(60,60,67,0.55)" strokeWidth="2.2" strokeLinecap="round"/></svg>
+                </button>
+              </div>
+              <p style={{ fontSize: 11, color: "rgba(60,60,67,0.45)", marginBottom: 20, fontWeight: 500 }}>{st.municipality} · {st.position}</p>
+
+              {isClosed ? (
+                <div style={{ marginBottom: 20, padding: "16px", borderRadius: 16, background: "rgba(60,60,67,0.06)", textAlign: "center" }}>
+                  <p style={{ fontSize: 14, fontWeight: 600, color: "rgba(60,60,67,0.45)" }}>Operação encerrada.</p>
+                  <p style={{ fontSize: 13, color: "rgba(60,60,67,0.35)", marginTop: 4 }}>Retorno às 5h.</p>
+                </div>
+              ) : (
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 20 }}>
+                  {([
+                    { dir: "northbound" as const, label: "Novo Hamburgo", color: "#FF3B30" },
+                    { dir: "southbound" as const, label: "Mercado", color: "#007AFF" },
+                  ] as const).filter(({ dir }) => {
+                    if (st.code === "NH") return dir === "southbound";
+                    if (st.code === "MR") return dir === "northbound";
+                    return true;
+                  }).map(({ dir, label, color }) => {
+                    const t = times[dir];
+                    return (
+                      <div key={dir} style={{ background: "rgba(60,60,67,0.06)", borderRadius: 16, padding: "14px 14px 12px" }}>
+                        <span style={{ display: "inline-block", fontSize: 9, fontWeight: 800, letterSpacing: "0.08em", textTransform: "uppercase", color: "white", background: color, borderRadius: 6, padding: "2px 6px", marginBottom: 10 }}>{label}</span>
+                        {t.last && <div style={{ marginBottom: 6 }}><p style={{ fontSize: 9, color: "rgba(60,60,67,0.4)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 1 }}>Último</p><p style={{ fontSize: 18, fontWeight: 700, color: "rgba(60,60,67,0.4)", lineHeight: 1 }}>{t.last}</p></div>}
+                        {t.next1 && <div style={{ marginBottom: 4 }}>
+                          <p style={{ fontSize: 9, color: "rgba(60,60,67,0.45)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 1 }}>Próximo</p>
+                          <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
+                            <p style={{ fontSize: 22, fontWeight: 700, color: "#1C1C1E", lineHeight: 1 }}>{t.next1}</p>
+                            {t.next1Arriving && (
+                              <span style={{ position: "relative", display: "inline-flex", width: 10, height: 10, flexShrink: 0 }}>
+                                <span style={{ position: "absolute", inset: 0, borderRadius: "50%", backgroundColor: "#FF3B30", opacity: 0.5, animation: "ping 1.5s cubic-bezier(0,0,0.2,1) infinite" }} />
+                                <span style={{ position: "relative", display: "inline-block", width: 10, height: 10, borderRadius: "50%", backgroundColor: "#FF3B30", boxShadow: "0 0 6px rgba(255,59,48,0.6)" }} />
+                              </span>
+                            )}
+                          </div>
+                        </div>}
+                        {t.next2 && <div><p style={{ fontSize: 9, color: "rgba(60,60,67,0.45)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 1 }}>Seguinte</p><p style={{ fontSize: 16, fontWeight: 600, color: "rgba(60,60,67,0.55)", lineHeight: 1 }}>{t.next2}</p></div>}
+                        {!t.next1 && <p style={{ fontSize: 12, color: "rgba(60,60,67,0.3)" }}>Sem previsão</p>}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              {conn && (
+                <div style={{ marginBottom: 16 }}>
+                  <p className="text-base font-semibold text-slate-500" style={{ marginBottom: 8 }}>Conexão disponível</p>
+                  {conn.integrated ? (
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <svg width="60" height="24" viewBox="-2 0 56 24" fill="none" style={{ flexShrink: 0 }}>
+                        <rect x="0" y="1" width="52" height="22" rx="11" fill="white" stroke="#007AFF" strokeWidth="2.5"/>
+                        <circle cx="11" cy="12" r="8" fill="#FF3B30" stroke="white" strokeWidth="1.5"/>
+                        <circle cx="41" cy="12" r="8" fill="#FF3B30" stroke="white" strokeWidth="1.5"/>
+                        <text x="41" y="16" fontSize="10" textAnchor="middle" fill="white">✈</text>
+                      </svg>
+                      <div>
+                        <div style={{ fontSize: 13, fontWeight: 700, color: conn.color }}>{conn.label}</div>
+                        {conn.sublabel && <div style={{ fontSize: 12, color: "rgba(60,60,67,0.5)", marginTop: 2 }}>{conn.sublabel}</div>}
+                      </div>
+                    </div>
+                  ) : (
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <div style={{ width: 8, height: 8, borderRadius: "50%", background: conn.color, flexShrink: 0 }} />
+                      <span style={{ fontSize: 13, fontWeight: 600, color: conn.color }}>{conn.label}</span>
+                      {conn.sublabel && <span style={{ fontSize: 12, color: "rgba(60,60,67,0.5)" }}>· {conn.sublabel}</span>}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              <div style={{ marginBottom: 16, display: "flex", alignItems: "flex-start", gap: 10 }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(60,60,67,0.4)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: 1 }}><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                <p style={{ fontSize: 13, color: "rgba(60,60,67,0.6)", lineHeight: 1.4 }}>{st.address}</p>
+              </div>
+              {activeFacilities.length > 0 && (
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                  {activeFacilities.map(f => {
+                    const icons: Record<string, React.ReactNode> = {
+                      "Escada rolante": <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 18h4l9-12h5"/><path d="M14 18h7"/><circle cx="5" cy="6" r="2"/></svg>,
+                      "Elevador": <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M9 9l3-3 3 3"/><path d="M9 15l3 3 3-3"/></svg>,
+                      "Biblioteca": <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>,
+                      "Bicicletário": <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="5.5" cy="17.5" r="3.5"/><circle cx="18.5" cy="17.5" r="3.5"/><path d="M15 6a1 1 0 0 0-1-1h-1l-3.5 9h7L15 6z"/><path d="M9.5 14L11 8h4.5"/></svg>,
+                      "Caixa eletrônico": <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>,
+                      "Farmácia": <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M5 12h14"/></svg>,
+                    };
+                    return (
+                      <div key={f.label} style={{ display: "flex", alignItems: "center", gap: 6, background: "rgba(60,60,67,0.07)", borderRadius: 99, padding: "6px 12px", color: "rgba(60,60,67,0.6)" }}>
+                        {icons[f.label]}
+                        <span style={{ fontSize: 12, fontWeight: 500, color: "rgba(60,60,67,0.7)" }}>{f.label}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+              <p style={{ fontSize: 10, color: "rgba(60,60,67,0.3)", marginTop: 20, lineHeight: 1.4 }}>Horários estimados com base no intervalo atual de {headwaySouth} min (↓) e {headwayNorth} min (↑).</p>
+            </div>
+          </aside>
+        );
+      })()}
+
         const st = STATIONS.find(s => s.code === selectedStationCode)!;
         const conn = CONNECTIONS[selectedStationCode];
         const times = getStationTrainTimes(st.minutesFromMercado, now, headwayPeriods, headwaySouth, headwayNorth);
@@ -1296,6 +1538,6 @@ export default function Home() {
           stationRef={stationTourRef}
         />
       )}
-    </>
+    </div>
   );
 }
