@@ -39,6 +39,12 @@ type TrainPosition = {
   topPercent: number;
 };
 
+type HeadwayPeriod = {
+  startMinutes: number;
+  headwayNH: number;
+  headwayMR: number;
+};
+
 const POLL_MS = 30_000;
 const TRAIN_TICK_MS = 10_000;
 const DEFAULT_HEADWAY_MINUTES = 12;
@@ -213,8 +219,9 @@ function minutesToHHMM(m: number): string {
 function getStationTrainTimes(
   minutesFromMercado: number,
   now: Date | null,
-  headwaySouth: number,
-  headwayNorth: number
+  periods: HeadwayPeriod[],
+  fallbackSouth: number,
+  fallbackNorth: number
 ): {
   southbound: { last: string | null; next1: string | null; next1Arriving: boolean; next2: string | null };
   northbound: { last: string | null; next1: string | null; next1Arriving: boolean; next2: string | null };
@@ -222,18 +229,18 @@ function getStationTrainTimes(
   const empty = { last: null, next1: null, next1Arriving: false, next2: null };
   if (!now) return { southbound: empty, northbound: empty };
   const minutesNow = now.getHours() * 60 + now.getMinutes() + now.getSeconds() / 60;
-  function timesForDir(baseOffset: number, hw: number) {
-    const base = SERVICE_START_MINUTES + baseOffset;
-    const n = Math.floor((minutesNow - base) / hw);
-    const candidates = [n - 1, n, n + 1, n + 2].map(i => base + i * hw).filter(t => t >= SERVICE_START_MINUTES && t < 23 * 60 + 30);
-    const past = candidates.filter(t => t <= minutesNow);
-    const future = candidates.filter(t => t > minutesNow);
+
+  const fallback: HeadwayPeriod[] = [{ startMinutes: SERVICE_START_MINUTES, headwayNH: fallbackSouth, headwayMR: fallbackNorth }];
+  const ps = periods.length > 0 ? periods : fallback;
+
+  function timesForDir(deps: number[], travelFromTerminal: number) {
+    const arrivals = deps.map(d => d + travelFromTerminal);
+    const past = arrivals.filter(t => t <= minutesNow);
+    const future = arrivals.filter(t => t > minutesNow);
     const lastPast = past.length > 0 ? past[past.length - 1] : null;
     const soonest = future.length > 0 ? future[0] : null;
-
     const justPassed = lastPast !== null && minutesNow - lastPast <= 2;
     const aboutToArrive = soonest !== null && soonest - minutesNow <= 1;
-
     if (justPassed && !aboutToArrive) {
       return {
         last: past.length > 1 ? minutesToHHMM(past[past.length - 2]) : null,
@@ -257,9 +264,13 @@ function getStationTrainTimes(
       next2: future.length > 1 ? minutesToHHMM(future[1]) : null,
     };
   }
+
+  const depsNH = buildDepartures(SERVICE_START_MINUTES, ps, p => p.headwayNH, minutesNow + 60);
+  const depsMR = buildDepartures(SERVICE_START_MINUTES, ps, p => p.headwayMR, minutesNow + 60);
+
   return {
-    southbound: timesForDir(ONE_WAY_TRAVEL_MINUTES - minutesFromMercado, headwaySouth),
-    northbound: timesForDir(minutesFromMercado, headwayNorth),
+    southbound: timesForDir(depsNH, ONE_WAY_TRAVEL_MINUTES - minutesFromMercado),
+    northbound: timesForDir(depsMR, minutesFromMercado),
   };
 }
 
@@ -390,6 +401,26 @@ function TremTour({
   )
 }
 
+function buildDepartures(
+  serviceStart: number,
+  periods: HeadwayPeriod[],
+  getHw: (p: HeadwayPeriod) => number,
+  maxMinutes: number
+): number[] {
+  const sorted = [...periods].sort((a, b) => a.startMinutes - b.startMinutes);
+  const deps: number[] = [];
+  let t = serviceStart;
+  while (t <= maxMinutes) {
+    deps.push(t);
+    let hw = getHw(sorted[0]);
+    for (const p of sorted) {
+      if (p.startMinutes <= t) hw = getHw(p);
+    }
+    t += hw;
+  }
+  return deps;
+}
+
 export default function Home() {
   const [status, setStatus] = useState<StatusInfo>({
     situation: "Carregando...",
@@ -413,6 +444,31 @@ export default function Home() {
   const headerRef = useRef<HTMLDivElement>(null);
   const stationTourRef = useRef<HTMLLIElement>(null);
   const [tourStep, setTourStep] = useState(-1);
+  const [headwayPeriods, setHeadwayPeriods] = useState<HeadwayPeriod[]>([]);
+    useEffect(() => {
+    async function fetchHistory() {
+      try {
+        const res = await fetch("/api/headway-history");
+        const raw = await res.json() as { recorded_at: string; headway_nh: number; headway_mr: number }[];
+        const periods: HeadwayPeriod[] = raw.map(r => ({
+          startMinutes: (() => {
+          const d = new Date(r.recorded_at);
+          return d.getHours() * 60 + d.getMinutes() + d.getSeconds() / 60;
+        })(),
+        headwayNH: r.headway_nh,
+        headwayMR: r.headway_mr,
+      }));
+      // Garante período desde o início do serviço com o headway mais antigo conhecido
+      if (periods.length > 0) {
+        periods.unshift({ startMinutes: SERVICE_START_MINUTES, headwayNH: periods[0].headwayNH, headwayMR: periods[0].headwayMR });
+      }
+      setHeadwayPeriods(periods);
+    } catch {}
+  }
+  fetchHistory();
+  const t = window.setInterval(fetchHistory, POLL_MS);
+  return () => window.clearInterval(t);
+}, []);
 
 
   useEffect(() => {
@@ -478,61 +534,43 @@ export default function Home() {
   const headwayNorth = Math.max(1, Math.round(status.intervalMercadotoNH ?? status.currentIntervalMinutes ?? DEFAULT_HEADWAY_MINUTES));
 
   const trainPositions = useMemo<TrainPosition[]>(() => {
-    const headway = Math.round((headwaySouth + headwayNorth) / 2);
-    if (!now) return [];
-    const minutesNow = now.getHours() * 60 + now.getMinutes() + now.getSeconds() / 60;
-    const elapsedSinceStart = minutesNow - SERVICE_START_MINUTES;
+  if (!now) return [];
+  const minutesNow = now.getHours() * 60 + now.getMinutes() + now.getSeconds() / 60;
 
-    if (elapsedSinceStart < 0) return [];
+  const fallbackPeriods: HeadwayPeriod[] = [{
+    startMinutes: SERVICE_START_MINUTES,
+    headwayNH: headwaySouth,
+    headwayMR: headwayNorth,
+  }];
+  const periods = headwayPeriods.length > 0 ? headwayPeriods : fallbackPeriods;
 
-    const firstDeparture = Math.floor((elapsedSinceStart - CYCLE_MINUTES) / headway);
-    const lastDeparture = Math.floor(elapsedSinceStart / headway);
-    const positions: TrainPosition[] = [];
+  const depsNH = buildDepartures(SERVICE_START_MINUTES, periods, p => p.headwayNH, minutesNow);
+  const depsMR = buildDepartures(SERVICE_START_MINUTES, periods, p => p.headwayMR, minutesNow);
 
-    for (let departureIndex = firstDeparture; departureIndex <= lastDeparture; departureIndex += 1) {
-      const elapsed = elapsedSinceStart - departureIndex * headway;
+  const positions: TrainPosition[] = [];
 
-      if (elapsed < 0 || elapsed > CYCLE_MINUTES) continue;
-
-      if (elapsed <= ONE_WAY_TRAVEL_MINUTES) {
-        const progress = elapsed / ONE_WAY_TRAVEL_MINUTES;
-        positions.push({
-          id: `s-${departureIndex}`,
-          direction: "southbound",
-          topPercent: progress * 100,
-        });
-        continue;
-      }
-
-      if (elapsed <= ONE_WAY_TRAVEL_MINUTES + TERMINAL_DWELL_MINUTES) {
-        positions.push({
-          id: `m-${departureIndex}`,
-          direction: "southbound",
-          topPercent: 100,
-        });
-        continue;
-      }
-
-      if (elapsed <= ONE_WAY_TRAVEL_MINUTES + TERMINAL_DWELL_MINUTES + ONE_WAY_TRAVEL_MINUTES) {
-        const progressFromMercado =
-          (elapsed - (ONE_WAY_TRAVEL_MINUTES + TERMINAL_DWELL_MINUTES)) / ONE_WAY_TRAVEL_MINUTES;
-        positions.push({
-          id: `n-${departureIndex}`,
-          direction: "northbound",
-          topPercent: (1 - progressFromMercado) * 100,
-        });
-        continue;
-      }
-
-      positions.push({
-        id: `h-${departureIndex}`,
-        direction: "northbound",
-        topPercent: 0,
-      });
+  for (const dep of depsNH) {
+    const elapsed = minutesNow - dep;
+    if (elapsed < 0) continue;
+    if (elapsed <= ONE_WAY_TRAVEL_MINUTES) {
+      positions.push({ id: `s-${dep}`, direction: "southbound", topPercent: (elapsed / ONE_WAY_TRAVEL_MINUTES) * 100 });
+    } else if (elapsed <= ONE_WAY_TRAVEL_MINUTES + TERMINAL_DWELL_MINUTES) {
+      positions.push({ id: `m-${dep}`, direction: "southbound", topPercent: 100 });
     }
+  }
 
-    return positions;
-  }, [now, status.currentIntervalMinutes]);
+  for (const dep of depsMR) {
+    const elapsed = minutesNow - dep;
+    if (elapsed < 0) continue;
+    if (elapsed <= ONE_WAY_TRAVEL_MINUTES) {
+      positions.push({ id: `n-${dep}`, direction: "northbound", topPercent: (1 - elapsed / ONE_WAY_TRAVEL_MINUTES) * 100 });
+    } else if (elapsed <= ONE_WAY_TRAVEL_MINUTES + TERMINAL_DWELL_MINUTES) {
+      positions.push({ id: `h-${dep}`, direction: "northbound", topPercent: 0 });
+    }
+  }
+
+  return positions;
+}, [now, headwayPeriods, headwaySouth, headwayNorth]);
 
   const modalRef = useRef<HTMLDivElement>(null);
   const [modalOpen, setModalOpen] = useState<"hidden" | "peek" | "open" | "resting">("hidden");
@@ -1062,7 +1100,7 @@ export default function Home() {
       {selectedStationCode && (() => {
         const st = STATIONS.find(s => s.code === selectedStationCode)!;
         const conn = CONNECTIONS[selectedStationCode];
-        const times = getStationTrainTimes(st.minutesFromMercado, now, headwaySouth, headwayNorth);
+        const times = getStationTrainTimes(st.minutesFromMercado, now, headwayPeriods, headwaySouth, headwayNorth);
         const facilities: { label: string; active: boolean }[] = [
           { label: "Escada rolante", active: st.escadaRolante },
           { label: "Elevador", active: st.elevador },
