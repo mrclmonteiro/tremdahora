@@ -1398,15 +1398,15 @@ export default function Home() {
                         <div key={dir} style={{ background: "rgba(60,60,67,0.06)", borderRadius: 16, padding: "14px 14px 12px" }}>
                           <span style={{ display: "inline-block", fontSize: 9, fontWeight: 800, letterSpacing: "0.08em", textTransform: "uppercase", color: "white", background: color, borderRadius: 6, padding: "2px 6px", marginBottom: 10 }}>{label}</span>
                           {t.last && <div style={{ marginBottom: 6 }}><p style={{ fontSize: 9, color: "rgba(60,60,67,0.4)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 1 }}>Último</p><p style={{ fontSize: 18, fontWeight: 700, color: "rgba(60,60,67,0.4)", lineHeight: 1 }}>{t.last}</p></div>}
-                          {t.next1 && <div style={{ marginBottom: 4 }}><p style={{ fontSize: 9, color: "rgba(60,60,67,0.45)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 1 }}>Próximo</p><div style={{ display: "flex", alignItems: "center", gap: 7 }}><p style={{ fontSize: 22, fontWeight: 700, color: "#1C1C1E", lineHeight: 1 }}>{t.next1}</p>{t.next1Arriving && (<span style={{ display: "inline-flex", alignItems: "center", gap: 4, background: "#FF3B30", borderRadius: 6, padding: "3px 7px 3px 5px", animation: "trem-chegando 0.55s steps(1) infinite", flexShrink: 0 }}>
-                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                          {t.next1 && <div style={{ marginBottom: 4 }}><p style={{ fontSize: 9, color: "rgba(60,60,67,0.45)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 1 }}>Próximo</p><div style={{ display: "flex", alignItems: "center", gap: 7 }}><p style={{ fontSize: 22, fontWeight: 700, color: "#1C1C1E", lineHeight: 1 }}>{t.next1}</p>{t.next1Arriving && (<span style={{ display: "inline-flex", alignItems: "center", gap: 4, animation: "trem-chegando 0.55s steps(1) infinite", flexShrink: 0 }}>
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#FF3B30" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                         <rect x="4" y="3" width="16" height="13" rx="3"/>
                         <path d="M4 10h16"/>
                         <path d="M8 3v7M16 3v7"/>
                         <path d="M7 19l-2 2M17 19l2 2"/>
                         <path d="M9 19h6"/>
                       </svg>
-                      <span style={{ fontSize: 9, fontWeight: 800, color: "white", letterSpacing: "0.08em" }}>AGORA</span>
+                      <span style={{ fontSize: 9, fontWeight: 800, color: "#FF3B30", letterSpacing: "0.08em" }}>AGORA</span>
                     </span>)}</div></div>}
                           {t.next2 && <div><p style={{ fontSize: 9, color: "rgba(60,60,67,0.45)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 1 }}>Seguinte</p><p style={{ fontSize: 16, fontWeight: 600, color: "rgba(60,60,67,0.55)", lineHeight: 1 }}>{t.next2}</p></div>}
                           {!t.next1 && <p style={{ fontSize: 12, color: "rgba(60,60,67,0.3)" }}>Sem previsão</p>}
@@ -1546,15 +1546,15 @@ export default function Home() {
   <p style={{ fontSize: 9, color: "rgba(60,60,67,0.45)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 1 }}>Próximo</p>
   <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
     <p style={{ fontSize: 22, fontWeight: 700, color: "#1C1C1E", lineHeight: 1 }}>{t.next1}</p>
-    {t.next1Arriving && (<span style={{ display: "inline-flex", alignItems: "center", gap: 4, background: "#FF3B30", borderRadius: 6, padding: "3px 7px 3px 5px", animation: "trem-chegando 0.55s steps(1) infinite", flexShrink: 0 }}>
-                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+    {t.next1Arriving && (<span style={{ display: "inline-flex", alignItems: "center", gap: 4, animation: "trem-chegando 0.55s steps(1) infinite", flexShrink: 0 }}>
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#FF3B30" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                         <rect x="4" y="3" width="16" height="13" rx="3"/>
                         <path d="M4 10h16"/>
                         <path d="M8 3v7M16 3v7"/>
                         <path d="M7 19l-2 2M17 19l2 2"/>
                         <path d="M9 19h6"/>
                       </svg>
-                      <span style={{ fontSize: 9, fontWeight: 800, color: "white", letterSpacing: "0.08em" }}>AGORA</span>
+                      <span style={{ fontSize: 9, fontWeight: 800, color: "#FF3B30", letterSpacing: "0.08em" }}>AGORA</span>
                     </span>)}
   </div>
 </div>}
