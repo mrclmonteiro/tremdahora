@@ -764,38 +764,28 @@ export default function Home() {
 
   const isDragging = dragStart !== null;
 
-  function getModalTransform(): string {
-    if (isDragging) {
-      return `translateY(calc(100% - ${Math.max(0, dragBaseRef.current + dragOffset)}px))`;
-    }
-    switch (modalOpen) {
-      case "hidden":  return "translateY(100%)";
-      case "peek":    return "translateY(calc(100% - 96px))";
-      case "resting": return "translateY(calc(100% - 68px))";
-      case "mid":     return `translateY(calc(100% - ${restingHeight + hintBump}px))`;
-      case "open":    return "translateY(0%)";
-    }
-  }
-
-  // Computa progress 0→1 entre resting e open para interpolação de margem/radius
-  function getDragProgress(): number {
-    if (!isDragging) return (modalOpen === "open") ? 1 : 0;
+  function getModalScale(): number {
+    const SCALE_RESTING = 0.91;
+    if (!isDragging) return modalOpen === "open" ? 1 : SCALE_RESTING;
     const modalH = modalRef.current?.offsetHeight ?? 400;
     const restingVisible = 68;
     const currentVisible = Math.max(restingVisible, dragBaseRef.current + dragOffset);
-    return Math.min(1, Math.max(0, (currentVisible - restingVisible) / (modalH - restingVisible)));
+    const progress = Math.min(1, Math.max(0, (currentVisible - restingVisible) / (modalH - restingVisible)));
+    return SCALE_RESTING + (1 - SCALE_RESTING) * progress;
   }
 
-  function getModalSideMargin(): number {
-    if (!isDragging) return (modalOpen === "open") ? 0 : 12;
-    return Math.max(0, 12 * (1 - getDragProgress()));
-  }
-
-  function getModalRadius(): string {
-    const p = isDragging ? getDragProgress() : (modalOpen === "open" ? 1 : 0);
-    const topR = 20 + 4 * p;       // 20 → 24
-    const botR = 14 * (1 - p);     // 14 → 0
-    return `${topR}px ${topR}px ${botR}px ${botR}px`;
+  function getModalTransform(): string {
+    const scale = getModalScale();
+    if (isDragging) {
+      return `translateY(calc(100% - ${Math.max(0, dragBaseRef.current + dragOffset)}px)) scale(${scale.toFixed(4)})`;
+    }
+    switch (modalOpen) {
+      case "hidden":  return `translateY(100%) scale(${scale.toFixed(4)})`;
+      case "peek":    return `translateY(calc(100% - 96px)) scale(${scale.toFixed(4)})`;
+      case "resting": return `translateY(calc(100% - 68px)) scale(${scale.toFixed(4)})`;
+      case "mid":     return `translateY(calc(100% - ${restingHeight + hintBump}px)) scale(${scale.toFixed(4)})`;
+      case "open":    return `translateY(0%) scale(1)`;
+    }
   }
 
   function doHintBounce() {
@@ -1088,12 +1078,11 @@ export default function Home() {
       {/* Bottom modal fixo — hidden no desktop */}
       <div
         ref={modalRef}
-        className="md:hidden fixed bottom-0 z-50"
+        className="md:hidden fixed left-0 right-0 bottom-0 z-50"
         style={{
-          left: getModalSideMargin(),
-          right: getModalSideMargin(),
           transform: getModalTransform(),
-          transition: isDragging ? "none" : "transform 0.45s cubic-bezier(0.32, 0.72, 0, 1), left 0.45s cubic-bezier(0.32, 0.72, 0, 1), right 0.45s cubic-bezier(0.32, 0.72, 0, 1)",
+          transformOrigin: "bottom center",
+          transition: isDragging ? "none" : "transform 0.45s cubic-bezier(0.32, 0.72, 0, 1)",
           touchAction: "none",
           willChange: "transform",
           backfaceVisibility: "hidden",
@@ -1101,14 +1090,12 @@ export default function Home() {
         }}
       >
         <section
-          className="px-5 pb-8 border border-white/40"
+          className="rounded-t-3xl rounded-b-xl px-5 pb-8 border border-white/40"
           style={{
             position: "relative",
-            borderRadius: getModalRadius(),
             background: "rgba(242,244,248,0.92)",
-            boxShadow: "0 -4px 32px rgba(0,0,0,0.12), 0 4px 0 rgba(242,244,248,0.92)",
+            boxShadow: "0 -4px 32px rgba(0,0,0,0.12), 0 -1px 0 rgba(255,255,255,0.8)",
             overflow: "hidden",
-            transition: isDragging ? "none" : "border-radius 0.45s cubic-bezier(0.32, 0.72, 0, 1)",
           }}
         >
           <div style={{ position: "absolute", inset: 0, borderRadius: "inherit", backdropFilter: "blur(32px) saturate(200%)", WebkitBackdropFilter: "blur(32px) saturate(200%)", pointerEvents: "none", zIndex: 0 }} />
