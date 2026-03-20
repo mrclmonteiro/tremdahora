@@ -782,7 +782,7 @@ export default function Home() {
     switch (modalOpen) {
       case "hidden":  return `translateY(100%) scale(${scale.toFixed(4)})`;
       case "peek":    return `translateY(calc(100% - 104px)) scale(${scale.toFixed(4)})`;
-      case "resting": return `translateY(calc(100% - 80px)) scale(${scale.toFixed(4)})`;
+      case "resting": return `translateY(calc(100% - 90px)) scale(${scale.toFixed(4)})`;
       case "mid":     return `translateY(calc(100% - ${restingHeight + hintBump}px)) scale(${scale.toFixed(4)})`;
       case "open":    return `translateY(0%) scale(1)`;
     }
