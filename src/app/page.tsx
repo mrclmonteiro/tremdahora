@@ -677,7 +677,7 @@ export default function Home() {
   const modalRef = useRef<HTMLDivElement>(null);
   const restingAnchorRef = useRef<HTMLParagraphElement>(null);
   const [restingHeight, setRestingHeight] = useState(180);
-  const [modalOpen, setModalOpen] = useState<"hidden" | "peek" | "open" | "resting">("hidden");
+  const [modalOpen, setModalOpen] = useState<"hidden" | "peek" | "open" | "resting" | "mid">("hidden");
   const [dragStart, setDragStart] = useState<number | null>(null);
   const [dragOffset, setDragOffset] = useState(0);
   const dragOffsetRef = useRef(0);
@@ -772,7 +772,11 @@ export default function Home() {
     const modalH = modalRef.current?.offsetHeight ?? 0;
     const windowH = window.innerHeight;
     // posição atual do topo do modal em px a partir do topo da tela
-    const currentTop = modalOpen === "open" ? windowH - modalH : windowH - 56;
+    const currentTop = modalOpen === "open" 
+      ? windowH - modalH 
+      : modalOpen === "mid" 
+        ? windowH - restingHeight 
+        : windowH - 56;
     dragBaseRef.current = windowH - currentTop; // quanto do modal está visível
     setDragOffset(0);
     setDragStart("touches" in e ? e.touches[0].clientY : (e as React.MouseEvent).clientY);
@@ -785,8 +789,20 @@ export default function Home() {
     setDragOffset(offset);
   }
   function handleModalDragEnd() {
-    if (dragOffsetRef.current > 50) setModalOpen("open");
-    else if (dragOffsetRef.current < -50) setModalOpen("resting");
+    if (dragOffsetRef.current > 50) {
+      if (modalOpen === "mid" || modalOpen === "open") {
+        setModalOpen("open");
+      } else {
+        // Primeira puxada: vai pra mid e faz bounce de convite
+        setModalOpen("mid");
+        setTimeout(() => {
+          setModalOpen("resting");
+          setTimeout(() => setModalOpen("mid"), 300);
+        }, 600);
+      }
+    } else if (dragOffsetRef.current < -50) {
+      setModalOpen(modalOpen === "open" ? "mid" : "resting");
+    }
     setDragStart(null);
     setDragOffset(0);
   }
@@ -1046,7 +1062,9 @@ export default function Home() {
                 ? "translateY(0%)"
                 : modalOpen === "peek"
                   ? "translateY(calc(100% - 96px))"
-                  : `translateY(calc(100% - ${restingHeight}px))`,
+                  : modalOpen === "mid"
+                    ? `translateY(calc(100% - ${restingHeight}px))`
+                    : "translateY(calc(100% - 68px))",
           transition: isDragging ? "none" : "transform 0.45s cubic-bezier(0.32, 0.72, 0, 1)",
           touchAction: "none",
           willChange: "transform",
