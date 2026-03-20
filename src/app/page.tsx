@@ -730,7 +730,8 @@ export default function Home() {
       if (!restingAnchorRef.current || !modalRef.current) return;
       const anchorBottom = restingAnchorRef.current.getBoundingClientRect().bottom;
       const modalTop = modalRef.current.getBoundingClientRect().top;
-      setRestingHeight(Math.round(anchorBottom - modalTop + 24));
+      // Divide pela escala pra compensar o transform: o modal está em scale(0.95) quando medido
+      setRestingHeight(Math.round((anchorBottom - modalTop + 32) / 0.95));
     }
     const t = setTimeout(measure, 600);
     return () => clearTimeout(t);
@@ -781,8 +782,8 @@ export default function Home() {
     }
     switch (modalOpen) {
       case "hidden":  return `translateY(100%) scale(${scale.toFixed(4)})`;
-      case "peek":    return `translateY(calc(100% - 104px)) scale(${scale.toFixed(4)})`;
-      case "resting": return `translateY(calc(100% - 90px)) scale(${scale.toFixed(4)})`;
+      case "peek":    return `translateY(calc(100% - 120px)) scale(${scale.toFixed(4)})`;
+      case "resting": return `translateY(calc(100% - 100px)) scale(${scale.toFixed(4)})`;
       case "mid":     return `translateY(calc(100% - ${restingHeight + hintBump}px)) scale(${scale.toFixed(4)})`;
       case "open":    return `translateY(0%) scale(1)`;
     }
@@ -792,7 +793,7 @@ export default function Home() {
     if (hintTimerRef.current) clearTimeout(hintTimerRef.current);
     // Espera a transição pro mid terminar (450ms) aí sobe 28px e volta
     hintTimerRef.current = setTimeout(() => {
-      setHintBump(28);
+      setHintBump(72);
       hintTimerRef.current = setTimeout(() => setHintBump(0), 500);
     }, 450);
   }
