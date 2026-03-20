@@ -484,13 +484,13 @@ export default function Home() {
     try { return !localStorage.getItem("dnit_alert_15mar_seen") } catch { return true }
   });
   const [headwayPeriods, setHeadwayPeriods] = useState<HeadwayPeriod[]>([]);
-    useEffect(() => {
-    async function fetchHistory() {
-      try {
-        const res = await fetch("/api/headway-history");
-        const raw = await res.json() as { recorded_at: string; headway_nh: number; headway_mr: number }[];
-        const periods: HeadwayPeriod[] = raw.map(r => ({
-          startMinutes: (() => {
+
+  const fetchHistory = useCallback(async () => {
+    try {
+      const res = await fetch("/api/headway-history");
+      const raw = await res.json() as { recorded_at: string; headway_nh: number; headway_mr: number }[];
+      const periods: HeadwayPeriod[] = raw.map(r => ({
+        startMinutes: (() => {
           const d = new Date(r.recorded_at);
           return d.getHours() * 60 + d.getMinutes() + d.getSeconds() / 60;
         })(),
@@ -503,11 +503,13 @@ export default function Home() {
       }
       setHeadwayPeriods(periods);
     } catch {}
-  }
-  fetchHistory();
-  const t = window.setInterval(fetchHistory, POLL_MS);
-  return () => window.clearInterval(t);
-}, []);
+  }, []);
+
+  useEffect(() => {
+    fetchHistory();
+    const t = window.setInterval(fetchHistory, POLL_MS);
+    return () => window.clearInterval(t);
+  }, [fetchHistory]);
 
 
   useEffect(() => {
@@ -530,6 +532,8 @@ export default function Home() {
 
   useEffect(() => { setNow(new Date()); }, []);
 
+  const lastHeadwayKeyRef = useRef<string | null>(null);
+
   const loadStatus = useCallback(async () => {
     try {
       const response = await fetch("/api/status", { cache: "no-store" });
@@ -538,8 +542,16 @@ export default function Home() {
       }
 
       const data = (await response.json()) as unknown;
-      setStatus(extractStatus(data));
+      const newStatus = extractStatus(data);
+      setStatus(newStatus);
       setLastUpdate(new Date());
+
+      // Se o headway mudou desde a última chamada, busca histórico imediatamente
+      const key = `${newStatus.intervalNHtoMercado}-${newStatus.intervalMercadotoNH}`;
+      if (lastHeadwayKeyRef.current !== null && lastHeadwayKeyRef.current !== key) {
+        fetchHistory();
+      }
+      lastHeadwayKeyRef.current = key;
     } catch {
       setStatus({
         situation: "Indisponível",
@@ -553,7 +565,7 @@ export default function Home() {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [fetchHistory]);
 
   useEffect(() => {
     loadStatus();
