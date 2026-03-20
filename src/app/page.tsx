@@ -171,9 +171,19 @@ function extractStatus(payload: unknown): StatusInfo {
   if (!op) return fallback;
 
   const aeroRaw = data.aeromovel as Record<string, unknown> | undefined;
+  const aeroSit = String(aeroRaw?.["descricao-situacao-operacional"] ?? "Sem dados");
+  const aeroReason = String(aeroRaw?.["motivo"] ?? "");
   const aeromovel = aeroRaw ? {
-    situation: String(aeroRaw["descricao-situacao-operacional"] ?? "Sem dados"),
-    reason: (() => { const s = String(aeroRaw["motivo"] ?? ""); return s.charAt(0).toUpperCase() + s.slice(1); })(),
+    situation: aeroSit,
+    reason: (() => {
+      // Combina situação + motivo pra detectar o texto completo horrível da API
+      const full = `${aeroSit} ${aeroReason}`.trim().toLowerCase();
+      if (full.includes("enchentes") || full.includes("inoperante")) {
+        return "Fora de operação devido às enchentes de maio de 2024";
+      }
+      const r = aeroReason;
+      return r ? r.charAt(0).toUpperCase() + r.slice(1) : "";
+    })(),
   } : null;
 
   const trechos = Array.isArray(op["trechos"])
@@ -184,9 +194,35 @@ function extractStatus(payload: unknown): StatusInfo {
   const ivNH = intervalos.find(i => i["estacao-partida"] === "Novo Hamburgo")?.intervalo ?? null;
   const ivMR = intervalos.find(i => i["estacao-partida"] === "Mercado")?.intervalo ?? null;
 
+  // Normaliza textos vindos da API
+  function normalizeSituation(s: string): string {
+    const map: Record<string, string> = {
+      "operação com alterações de serviço": "Operando com alterações",
+    };
+    return map[s.toLowerCase()] ?? s;
+  }
+  function normalizeReason(s: string): string {
+    const map: Record<string, string> = {
+      "recuperação do sistema de energia dos trens": "O sistema de energia dos trens está sendo recuperado",
+    };
+    const key = s.trim().toLowerCase().replace(/\.$/, "");
+    const mapped = map[key];
+    if (mapped) return mapped;
+    return s.charAt(0).toUpperCase() + s.slice(1);
+  }
+  function normalizeAeroSituation(s: string): string {
+    // Remove o "Fora de Operação" duplicado que vem junto com a descrição
+    const map: Record<string, string> = {
+      "fora de operação enchentes aeromovel inoperante": "Fora de operação devido às enchentes de maio de 2024",
+      "enchentes aeromovel inoperante": "Fora de operação devido às enchentes de maio de 2024",
+      "fora de operação": "Fora de operação",
+    };
+    return map[s.trim().toLowerCase()] ?? s;
+  }
+
   return {
-    situation: String(op["descricao-situacao-operacional"] ?? fallback.situation),
-    reason: (() => { const s = String(op["motivo"] ?? "Operação sem observações no momento."); return s.charAt(0).toUpperCase() + s.slice(1); })(),
+    situation: normalizeSituation(String(op["descricao-situacao-operacional"] ?? fallback.situation)),
+    reason: normalizeReason(String(op["motivo"] ?? "Operação sem observações no momento.")),
     currentIntervalMinutes: typeof op["intervalo-entre-trens"] === "number" ? op["intervalo-entre-trens"] : null,
     intervalNHtoMercado: ivNH,
     intervalMercadotoNH: ivMR,
@@ -1047,17 +1083,17 @@ export default function Home() {
                 }} />
               </span>
               <h2 className="text-xl font-semibold tracking-tight text-slate-900 leading-tight">{status.situation}</h2>
-                {isStationsClosing && (
-                <p style={{ fontSize: 12, color: "#FF9500", fontWeight: 600, marginTop: 4 }}>
-                Estações fechadas. Últimos trens em circulação.
-                </p>
-                )}
-                {isClosed && (
-                <p style={{ fontSize: 12, color: "rgba(60,60,67,0.45)", fontWeight: 500, marginTop: 4 }}>
-                Operação encerrada. Retorno às 5h.
-                </p>
-                )}
             </div>
+            {isStationsClosing && (
+              <p style={{ fontSize: 12, color: "#FF9500", fontWeight: 600, marginTop: 4 }}>
+                Estações fechadas. Últimos trens em circulação.
+              </p>
+            )}
+            {isClosed && (
+              <p style={{ fontSize: 12, color: "rgba(60,60,67,0.45)", fontWeight: 500, marginTop: 4 }}>
+                Operação encerrada. Retorno às 5h.
+              </p>
+            )}
 
           </div>
 
@@ -1288,7 +1324,7 @@ export default function Home() {
           ];
           const activeFacilities = facilities.filter(f => f.active);
           return (
-            <aside key={selectedStationCode} className="flex flex-col w-96 overflow-y-auto rounded-2xl" style={{ position: "absolute", left: "calc(100% - 12px + 8px)", top: "12px", bottom: "12px", background: "rgba(245,247,251,0.82)", backdropFilter: "blur(28px) saturate(180%)", WebkitBackdropFilter: "blur(28px) saturate(180%)", border: "1px solid rgba(255,255,255,0.55)", boxShadow: "0 8px 40px rgba(0,0,0,0.13)", transform: stationModalOpen ? "translateX(0) scale(1)" : "translateX(-8px) scale(0.97)", opacity: stationModalOpen ? 1 : 0, transition: "transform 0.35s cubic-bezier(0.32,0.72,0,1), opacity 0.25s ease", pointerEvents: stationModalOpen ? "auto" : "none" }}>
+            <aside key={selectedStationCode} className="flex flex-col w-92 overflow-y-auto rounded-2xl" style={{ position: "absolute", left: "calc(100% - 12px + 8px)", top: "12px", bottom: "12px", background: "rgba(245,247,251,0.82)", backdropFilter: "blur(28px) saturate(180%)", WebkitBackdropFilter: "blur(28px) saturate(180%)", border: "1px solid rgba(255,255,255,0.55)", boxShadow: "0 8px 40px rgba(0,0,0,0.13)", transform: stationModalOpen ? "translateX(0) scale(1)" : "translateX(-8px) scale(0.97)", opacity: stationModalOpen ? 1 : 0, transition: "transform 0.35s cubic-bezier(0.32,0.72,0,1), opacity 0.25s ease", pointerEvents: stationModalOpen ? "auto" : "none" }}>
               <div style={{ padding: "20px 20px 40px" }}>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
                   <h2 style={{ fontSize: 20, fontWeight: 700, color: "#1C1C1E" }}>{st.name}</h2>
