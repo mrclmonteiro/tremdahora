@@ -675,6 +675,8 @@ export default function Home() {
 }, [now, headwayPeriods, headwaySouth, headwayNorth]);
 
   const modalRef = useRef<HTMLDivElement>(null);
+  const restingAnchorRef = useRef<HTMLParagraphElement>(null);
+  const [restingHeight, setRestingHeight] = useState(180);
   const [modalOpen, setModalOpen] = useState<"hidden" | "peek" | "open" | "resting">("hidden");
   const [dragStart, setDragStart] = useState<number | null>(null);
   const [dragOffset, setDragOffset] = useState(0);
@@ -724,6 +726,20 @@ export default function Home() {
     return () => { clearTimeout(t1); clearTimeout(t2); };
   }, []);
 
+  // Mede a altura do conteúdo até "Atualizado às" para o resting state
+  useEffect(() => {
+    function measure() {
+      if (!restingAnchorRef.current || !modalRef.current) return;
+      const anchorBottom = restingAnchorRef.current.getBoundingClientRect().bottom;
+      const modalTop = modalRef.current.getBoundingClientRect().top;
+      const h = anchorBottom - modalTop + 20; // +20 de padding inferior
+      setRestingHeight(h);
+    }
+    // Mede quando o modal aparece e quando o status muda
+    const t = setTimeout(measure, 500);
+    return () => clearTimeout(t);
+  }, [status, lastUpdate]);
+
   useEffect(() => {
     function onMove(e: TouchEvent | MouseEvent) {
       if (dragStart === null) return;
@@ -769,8 +785,8 @@ export default function Home() {
     setDragOffset(offset);
   }
   function handleModalDragEnd() {
-    if (dragOffsetRef.current > 60) setModalOpen("open");
-    else if (dragOffsetRef.current < -40) setModalOpen("resting");
+    if (dragOffsetRef.current > 50) setModalOpen("open");
+    else if (dragOffsetRef.current < -50) setModalOpen("resting");
     setDragStart(null);
     setDragOffset(0);
   }
@@ -1030,7 +1046,7 @@ export default function Home() {
                 ? "translateY(0%)"
                 : modalOpen === "peek"
                   ? "translateY(calc(100% - 96px))"
-                  : "translateY(calc(100% - 68px))",
+                  : `translateY(calc(100% - ${restingHeight}px))`,
           transition: isDragging ? "none" : "transform 0.45s cubic-bezier(0.32, 0.72, 0, 1)",
           touchAction: "none",
           willChange: "transform",
@@ -1042,12 +1058,12 @@ export default function Home() {
           className="rounded-t-3xl rounded-b-xl px-5 pb-8 border border-white/40"
           style={{
             position: "relative",
-            background: "var(--lg-bg)",
-            boxShadow: "var(--lg-shadow)",
+            background: "rgba(242,244,248,0.92)",
+            boxShadow: "0 -4px 32px rgba(0,0,0,0.12), 0 -1px 0 rgba(255,255,255,0.8)",
             overflow: "hidden",
           }}
         >
-          <div style={{ position: "absolute", inset: 0, borderRadius: "inherit", backdropFilter: "blur(24px) saturate(180%)", WebkitBackdropFilter: "blur(24px) saturate(180%)", pointerEvents: "none", zIndex: 0 }} />
+          <div style={{ position: "absolute", inset: 0, borderRadius: "inherit", backdropFilter: "blur(32px) saturate(200%)", WebkitBackdropFilter: "blur(32px) saturate(200%)", pointerEvents: "none", zIndex: 0 }} />
           <div style={{ position: "relative", zIndex: 1 }}>
             <div
               onMouseDown={handleModalDragStart}
@@ -1171,7 +1187,7 @@ export default function Home() {
             )}
           </div>
 
-          <p className="mt-4 text-[11px] text-slate-400">
+          <p ref={restingAnchorRef} className="mt-4 text-[11px] text-slate-400">
             Atualizado às {lastUpdate ? lastUpdate.toLocaleTimeString("pt-BR") : "—"}
           </p>
 
