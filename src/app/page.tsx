@@ -353,48 +353,48 @@ function FlipChar({ char, prevChar, fontSize, color, delay }: {
 
   return (
     <span style={{ position: "relative", display: "inline-block", width: char === ":" ? fontSize * 0.35 : fontSize * 0.65, height: h, overflow: "visible", verticalAlign: "top" }}>
-      {/* Static bottom half — next value */}
+      {/* Static bottom half — next value (mostra metade inferior) */}
       <span style={{
         position: "absolute", left: 0, right: 0, bottom: 0, height: half,
-        overflow: "hidden", display: "flex", alignItems: "flex-start",
+        overflow: "hidden",
         fontVariantNumeric: "tabular-nums",
       }}>
-        <span style={{ fontSize, fontWeight: 700, color, lineHeight: `${h}px`, display: "block", transform: `translateY(0)` }}>{next}</span>
+        <span style={{ fontSize, fontWeight: 700, color, lineHeight: `${h}px`, display: "block", transform: `translateY(-${half}px)` }}>{next}</span>
       </span>
-      {/* Static top half — current value */}
+      {/* Static top half — current value (mostra metade superior) */}
       <span style={{
         position: "absolute", left: 0, right: 0, top: 0, height: half,
-        overflow: "hidden", display: "flex", alignItems: "flex-end",
+        overflow: "hidden",
         fontVariantNumeric: "tabular-nums",
       }}>
-        <span style={{ fontSize, fontWeight: 700, color, lineHeight: `${h}px`, display: "block", transform: `translateY(-${half}px)` }}>{displayed}</span>
+        <span style={{ fontSize, fontWeight: 700, color, lineHeight: `${h}px`, display: "block", transform: `translateY(0)` }}>{displayed}</span>
       </span>
-      {/* Animated top flap — rotates down to reveal next */}
+      {/* Animated top flap — gira pra baixo mostrando metade superior do valor atual */}
       {flipping && (
         <span style={{
           position: "absolute", left: 0, right: 0, top: 0, height: half,
           overflow: "hidden",
           transformOrigin: "bottom center",
-          perspective: 200,
+          perspective: 300,
           animation: "solari-top 0.16s ease-in forwards",
           fontVariantNumeric: "tabular-nums",
           pointerEvents: "none",
         }}>
-          <span style={{ fontSize, fontWeight: 700, color, lineHeight: `${h}px`, display: "block", transform: `translateY(-${half}px)` }}>{displayed}</span>
+          <span style={{ fontSize, fontWeight: 700, color, lineHeight: `${h}px`, display: "block", transform: `translateY(0)` }}>{displayed}</span>
         </span>
       )}
-      {/* Animated bottom flap — rotates up to reveal */}
+      {/* Animated bottom flap — gira de cima pra baixo revelando metade inferior do próximo */}
       {flipping && (
         <span style={{
           position: "absolute", left: 0, right: 0, bottom: 0, height: half,
           overflow: "hidden",
           transformOrigin: "top center",
-          perspective: 200,
+          perspective: 300,
           animation: "solari-bot 0.16s ease-out 0.08s forwards",
           fontVariantNumeric: "tabular-nums",
           pointerEvents: "none",
         }}>
-          <span style={{ fontSize, fontWeight: 700, color, lineHeight: `${h}px`, display: "block", transform: `translateY(0)` }}>{next}</span>
+          <span style={{ fontSize, fontWeight: 700, color, lineHeight: `${h}px`, display: "block", transform: `translateY(-${half}px)` }}>{next}</span>
         </span>
       )}
     </span>
