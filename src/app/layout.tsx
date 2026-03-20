@@ -25,7 +25,7 @@ export const metadata: Metadata = {
   },
   openGraph: {
     title: "Trem da Hora",
-    description: "Acompanhamento de horários e operação da Trensurb em Porto Alegre.",
+    description: "Acompanhe os horários e operação da Trensurb em tempo real",
     images: [{ url: "/og-image.png", width: 1200, height: 630 }],
   },
   twitter: {
@@ -40,7 +40,7 @@ export const viewport: Viewport = {
   maximumScale: 1,
   userScalable: false,
   viewportFit: "cover",
-  themeColor: "#f5f7fb",
+  themeColor: "#e6e8ed",
 };
 
 export default function RootLayout({
