@@ -480,9 +480,8 @@ export default function Home() {
   const sidebarRef = useRef<HTMLElement>(null);
   const toggleRef = useRef<HTMLDivElement>(null);
   const [tourStep, setTourStep] = useState(-1);
-  const [showDNITAlert, setShowDNITAlert] = useState(() => {
-    try { return !localStorage.getItem("dnit_alert_15mar_seen") } catch { return true }
-  });
+  type Announcement = { id: number; title: string; body: string; link: string | null; link_label: string | null; storage_key: string; };
+  const [announcement, setAnnouncement] = useState<Announcement | null>(null);
   const [headwayPeriods, setHeadwayPeriods] = useState<HeadwayPeriod[]>([]);
 
   const fetchHistory = useCallback(async () => {
@@ -512,6 +511,21 @@ export default function Home() {
     return () => window.clearInterval(t);
   }, [fetchHistory]); // loadStatus é chamado via .then, não precisa ser dependência
 
+
+  // Fetch announcements — mostra o primeiro ativo que o usuário ainda não viu
+  useEffect(() => {
+    async function fetchAnnouncements() {
+      try {
+        const res = await fetch("/api/announcements");
+        const data = await res.json() as { id: number; title: string; body: string; link: string | null; link_label: string | null; storage_key: string }[];
+        const unseen = data.find(a => {
+          try { return !localStorage.getItem(`announcement_seen_${a.storage_key}`); } catch { return true; }
+        });
+        if (unseen) setAnnouncement(unseen);
+      } catch {}
+    }
+    fetchAnnouncements();
+  }, []);
 
   useEffect(() => {
     function onScroll() {
@@ -1507,8 +1521,8 @@ export default function Home() {
           </div>
         );
       })()}
-      {/* ── ALERTA DNIT domingo 15/03 ── */}
-      {showDNITAlert && (
+      {/* ── ANÚNCIO DINÂMICO ── */}
+      {announcement && (
         <div
           style={{
             position: "fixed", inset: 0, zIndex: 300,
@@ -1540,59 +1554,46 @@ export default function Home() {
                 <circle cx="24" cy="33" r="1.8" fill="#FF9500"/>
               </svg>
             </div>
-
             {/* Título */}
             <h2 style={{ fontSize: 17, fontWeight: 700, color: "#1C1C1E", margin: 0, marginBottom: 10, letterSpacing: "-0.2px" }}>
-              Alteração na operação
+              {announcement.title}
             </h2>
-
             {/* Texto */}
-            <p style={{ fontSize: 14, color: "rgba(60,60,67,0.75)", lineHeight: 1.55, margin: 0, marginBottom: 20 }}>
-              Neste domingo, a Trensurb vai operar com alterações devido a uma obra do DNIT. Os trens partirão do terminal Mercado e seguirão apenas até a estação Mathias Velho, de onde o trajeto será complementado por um ônibus sem custo adicional.{" "}
-              <a
-                href="https://www.gov.br/trensurb/pt-br/assuntos/noticias/obras-do-dnit-em-viaduto-sobre-a-via-da-trensurb-causam-alteracoes-na-operacao-do-metro-no-domingo-15"
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{ color: "#007AFF", textDecoration: "none", fontWeight: 600 }}
-              >
-                Confira as informações completas.
-              </a>
+            <p style={{ fontSize: 14, color: "rgba(60,60,67,0.75)", lineHeight: 1.55, margin: 0, marginBottom: announcement.link ? 6 : 20 }}>
+              {announcement.body}
             </p>
-
+            {announcement.link && (
+              <p style={{ margin: "0 0 20px" }}>
+                <a
+                  href={announcement.link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ color: "#007AFF", textDecoration: "none", fontWeight: 600, fontSize: 14 }}
+                >
+                  {announcement.link_label || "Saiba mais."}
+                </a>
+              </p>
+            )}
             {/* Botão OK */}
             <button
               onClick={() => {
-                try { localStorage.setItem("dnit_alert_15mar_seen", "1") } catch {}
-                setShowDNITAlert(false)
+                try { localStorage.setItem(`announcement_seen_${announcement.storage_key}`, "1") } catch {}
+                setAnnouncement(null);
               }}
-              onMouseDown={e => {
-                e.currentTarget.style.transform = "scale(1.06)"
-                e.currentTarget.style.filter = "brightness(1.15)"
-              }}
-              onMouseUp={e => {
-                e.currentTarget.style.transform = "scale(1)"
-                e.currentTarget.style.filter = "brightness(1)"
-              }}
-              onTouchStart={e => {
-                e.currentTarget.style.transform = "scale(1.06)"
-                e.currentTarget.style.filter = "brightness(1.15)"
-              }}
+              onMouseDown={e => { e.currentTarget.style.transform = "scale(1.06)"; e.currentTarget.style.filter = "brightness(1.15)"; }}
+              onMouseUp={e => { e.currentTarget.style.transform = "scale(1)"; e.currentTarget.style.filter = "brightness(1)"; }}
+              onTouchStart={e => { e.currentTarget.style.transform = "scale(1.06)"; e.currentTarget.style.filter = "brightness(1.15)"; }}
               onTouchEnd={e => {
-                e.currentTarget.style.transform = "scale(1)"
-                e.currentTarget.style.filter = "brightness(1)"
-                try { localStorage.setItem("dnit_alert_15mar_seen", "1") } catch {}
-                setShowDNITAlert(false)
+                e.currentTarget.style.transform = "scale(1)";
+                e.currentTarget.style.filter = "brightness(1)";
+                try { localStorage.setItem(`announcement_seen_${announcement.storage_key}`, "1") } catch {}
+                setAnnouncement(null);
               }}
               style={{
-                width: "100%",
-                padding: "14px",
-                background: "#007AFF",
-                color: "white",
-                border: "none",
-                borderRadius: 99,
-                fontSize: 16,
-                fontWeight: 700,
-                cursor: "pointer",
+                width: "100%", padding: "14px",
+                background: "#007AFF", color: "white",
+                border: "none", borderRadius: 99,
+                fontSize: 16, fontWeight: 700, cursor: "pointer",
                 boxShadow: "0 4px 16px rgba(0,122,255,0.35)",
                 transition: "transform 0.15s cubic-bezier(0.34,1.56,0.64,1), filter 0.1s ease",
                 letterSpacing: "-0.1px",
