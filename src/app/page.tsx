@@ -1398,7 +1398,16 @@ export default function Home() {
                         <div key={dir} style={{ background: "rgba(60,60,67,0.06)", borderRadius: 16, padding: "14px 14px 12px" }}>
                           <span style={{ display: "inline-block", fontSize: 9, fontWeight: 800, letterSpacing: "0.08em", textTransform: "uppercase", color: "white", background: color, borderRadius: 6, padding: "2px 6px", marginBottom: 10 }}>{label}</span>
                           {t.last && <div style={{ marginBottom: 6 }}><p style={{ fontSize: 9, color: "rgba(60,60,67,0.4)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 1 }}>Último</p><p style={{ fontSize: 18, fontWeight: 700, color: "rgba(60,60,67,0.4)", lineHeight: 1 }}>{t.last}</p></div>}
-                          {t.next1 && <div style={{ marginBottom: 4 }}><p style={{ fontSize: 9, color: "rgba(60,60,67,0.45)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 1 }}>Próximo</p><div style={{ display: "flex", alignItems: "center", gap: 7 }}><p style={{ fontSize: 22, fontWeight: 700, color: "#1C1C1E", lineHeight: 1 }}>{t.next1}</p>{t.next1Arriving && (<span style={{ position: "relative", display: "inline-flex", width: 10, height: 10, flexShrink: 0 }}><span style={{ position: "absolute", inset: 0, borderRadius: "50%", backgroundColor: "#FF3B30", opacity: 0.5, animation: "ping 1.5s cubic-bezier(0,0,0.2,1) infinite" }} /><span style={{ position: "relative", display: "inline-block", width: 10, height: 10, borderRadius: "50%", backgroundColor: "#FF3B30", boxShadow: "0 0 6px rgba(255,59,48,0.6)" }} /></span>)}</div></div>}
+                          {t.next1 && <div style={{ marginBottom: 4 }}><p style={{ fontSize: 9, color: "rgba(60,60,67,0.45)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 1 }}>Próximo</p><div style={{ display: "flex", alignItems: "center", gap: 7 }}><p style={{ fontSize: 22, fontWeight: 700, color: "#1C1C1E", lineHeight: 1 }}>{t.next1}</p>{t.next1Arriving && (<span style={{ display: "inline-flex", alignItems: "center", gap: 4, background: "#FF3B30", borderRadius: 6, padding: "3px 7px 3px 5px", animation: "trem-chegando 0.55s steps(1) infinite", flexShrink: 0 }}>
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                        <rect x="4" y="3" width="16" height="13" rx="3"/>
+                        <path d="M4 10h16"/>
+                        <path d="M8 3v7M16 3v7"/>
+                        <path d="M7 19l-2 2M17 19l2 2"/>
+                        <path d="M9 19h6"/>
+                      </svg>
+                      <span style={{ fontSize: 9, fontWeight: 800, color: "white", letterSpacing: "0.08em" }}>AGORA</span>
+                    </span>)}</div></div>}
                           {t.next2 && <div><p style={{ fontSize: 9, color: "rgba(60,60,67,0.45)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 1 }}>Seguinte</p><p style={{ fontSize: 16, fontWeight: 600, color: "rgba(60,60,67,0.55)", lineHeight: 1 }}>{t.next2}</p></div>}
                           {!t.next1 && <p style={{ fontSize: 12, color: "rgba(60,60,67,0.3)" }}>Sem previsão</p>}
                         </div>
@@ -1537,12 +1546,16 @@ export default function Home() {
   <p style={{ fontSize: 9, color: "rgba(60,60,67,0.45)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 1 }}>Próximo</p>
   <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
     <p style={{ fontSize: 22, fontWeight: 700, color: "#1C1C1E", lineHeight: 1 }}>{t.next1}</p>
-    {t.next1Arriving && (
-      <span style={{ position: "relative", display: "inline-flex", width: 10, height: 10, flexShrink: 0 }}>
-        <span style={{ position: "absolute", inset: 0, borderRadius: "50%", backgroundColor: "#FF3B30", opacity: 0.5, animation: "ping 1.5s cubic-bezier(0,0,0.2,1) infinite" }} />
-        <span style={{ position: "relative", display: "inline-block", width: 10, height: 10, borderRadius: "50%", backgroundColor: "#FF3B30", boxShadow: "0 0 6px rgba(255,59,48,0.6)" }} />
-      </span>
-    )}
+    {t.next1Arriving && (<span style={{ display: "inline-flex", alignItems: "center", gap: 4, background: "#FF3B30", borderRadius: 6, padding: "3px 7px 3px 5px", animation: "trem-chegando 0.55s steps(1) infinite", flexShrink: 0 }}>
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                        <rect x="4" y="3" width="16" height="13" rx="3"/>
+                        <path d="M4 10h16"/>
+                        <path d="M8 3v7M16 3v7"/>
+                        <path d="M7 19l-2 2M17 19l2 2"/>
+                        <path d="M9 19h6"/>
+                      </svg>
+                      <span style={{ fontSize: 9, fontWeight: 800, color: "white", letterSpacing: "0.08em" }}>AGORA</span>
+                    </span>)}
   </div>
 </div>}
                         {t.next2 && <div><p style={{ fontSize: 9, color: "rgba(60,60,67,0.45)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 1 }}>Seguinte</p><p style={{ fontSize: 16, fontWeight: 600, color: "rgba(60,60,67,0.55)", lineHeight: 1 }}>{t.next2}</p></div>}
