@@ -777,11 +777,32 @@ export default function Home() {
     }
   }
 
+  // Computa progress 0→1 entre resting e open para interpolação de margem/radius
+  function getDragProgress(): number {
+    if (!isDragging) return (modalOpen === "open") ? 1 : 0;
+    const modalH = modalRef.current?.offsetHeight ?? 400;
+    const restingVisible = 68;
+    const currentVisible = Math.max(restingVisible, dragBaseRef.current + dragOffset);
+    return Math.min(1, Math.max(0, (currentVisible - restingVisible) / (modalH - restingVisible)));
+  }
+
+  function getModalSideMargin(): number {
+    if (!isDragging) return (modalOpen === "open") ? 0 : 12;
+    return Math.max(0, 12 * (1 - getDragProgress()));
+  }
+
+  function getModalRadius(): string {
+    const p = isDragging ? getDragProgress() : (modalOpen === "open" ? 1 : 0);
+    const topR = 20 + 4 * p;       // 20 → 24
+    const botR = 14 * (1 - p);     // 14 → 0
+    return `${topR}px ${topR}px ${botR}px ${botR}px`;
+  }
+
   function doHintBounce() {
     if (hintTimerRef.current) clearTimeout(hintTimerRef.current);
     // Espera a transição pro mid terminar (450ms) aí sobe 28px e volta
     hintTimerRef.current = setTimeout(() => {
-      setHintBump(60);
+      setHintBump(28);
       hintTimerRef.current = setTimeout(() => setHintBump(0), 500);
     }, 450);
   }
@@ -1067,10 +1088,12 @@ export default function Home() {
       {/* Bottom modal fixo — hidden no desktop */}
       <div
         ref={modalRef}
-        className="md:hidden fixed left-0 right-0 bottom-0 z-50 rounded-t-3xl"
+        className="md:hidden fixed bottom-0 z-50"
         style={{
+          left: getModalSideMargin(),
+          right: getModalSideMargin(),
           transform: getModalTransform(),
-          transition: isDragging ? "none" : "transform 0.45s cubic-bezier(0.32, 0.72, 0, 1)",
+          transition: isDragging ? "none" : "transform 0.45s cubic-bezier(0.32, 0.72, 0, 1), left 0.45s cubic-bezier(0.32, 0.72, 0, 1), right 0.45s cubic-bezier(0.32, 0.72, 0, 1)",
           touchAction: "none",
           willChange: "transform",
           backfaceVisibility: "hidden",
@@ -1078,12 +1101,14 @@ export default function Home() {
         }}
       >
         <section
-          className="rounded-t-3xl rounded-b-xl px-5 pb-8 border border-white/40"
+          className="px-5 pb-8 border border-white/40"
           style={{
             position: "relative",
+            borderRadius: getModalRadius(),
             background: "rgba(242,244,248,0.92)",
-            boxShadow: "0 -4px 32px rgba(0,0,0,0.12), 0 -1px 0 rgba(255,255,255,0.8)",
+            boxShadow: "0 -4px 32px rgba(0,0,0,0.12), 0 4px 0 rgba(242,244,248,0.92)",
             overflow: "hidden",
+            transition: isDragging ? "none" : "border-radius 0.45s cubic-bezier(0.32, 0.72, 0, 1)",
           }}
         >
           <div style={{ position: "absolute", inset: 0, borderRadius: "inherit", backdropFilter: "blur(32px) saturate(200%)", WebkitBackdropFilter: "blur(32px) saturate(200%)", pointerEvents: "none", zIndex: 0 }} />
