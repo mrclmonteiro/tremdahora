@@ -678,6 +678,7 @@ export default function Home() {
   const restingAnchorRef = useRef<HTMLParagraphElement>(null);
   const [restingHeight, setRestingHeight] = useState(180);
   const [modalOpen, setModalOpen] = useState<"hidden" | "peek" | "open" | "resting" | "mid">("hidden");
+  const [showBounceHint, setShowBounceHint] = useState(false);
   const [dragStart, setDragStart] = useState<number | null>(null);
   const [dragOffset, setDragOffset] = useState(0);
   const dragOffsetRef = useRef(0);
@@ -790,15 +791,16 @@ export default function Home() {
   }
   function handleModalDragEnd() {
     if (dragOffsetRef.current > 50) {
-      if (modalOpen === "mid" || modalOpen === "open") {
+      if (modalOpen === "mid") {
+        setModalOpen("open");
+      } else if (modalOpen === "open") {
         setModalOpen("open");
       } else {
-        // Primeira puxada: vai pra mid e faz bounce de convite
+        // Primeira puxada: vai pra mid e faz bounce de convite pra cima
         setModalOpen("mid");
-        setTimeout(() => {
-          setModalOpen("resting");
-          setTimeout(() => setModalOpen("mid"), 300);
-        }, 600);
+        // Bounce: usa animation class em vez de setTimeout pra não bloquear drag
+        setShowBounceHint(true);
+        setTimeout(() => setShowBounceHint(false), 900);
       }
     } else if (dragOffsetRef.current < -50) {
       setModalOpen(modalOpen === "open" ? "mid" : "resting");
@@ -1052,7 +1054,7 @@ export default function Home() {
       {/* Bottom modal fixo — hidden no desktop */}
       <div
         ref={modalRef}
-        className="md:hidden fixed left-0 right-0 bottom-0 z-50 rounded-t-3xl"
+        className={`md:hidden fixed left-0 right-0 bottom-0 z-50 rounded-t-3xl${showBounceHint && !isDragging ? " animate-hint-up" : ""}`}
         style={{
           transform: isDragging
             ? `translateY(calc(100% - ${dragBaseRef.current + dragOffset}px))`

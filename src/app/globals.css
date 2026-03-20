@@ -138,6 +138,18 @@ body {
   animation: bounce-modal 1.2s cubic-bezier(0.68, -0.55, 0.27, 1.55);
 }
 
+@keyframes hint-up {
+  0%   { transform: translateY(0); }
+  30%  { transform: translateY(-22px); }
+  60%  { transform: translateY(-10px); }
+  80%  { transform: translateY(-18px); }
+  100% { transform: translateY(0); }
+}
+
+.animate-hint-up {
+  animation: hint-up 0.85s cubic-bezier(0.34, 1.2, 0.64, 1);
+}
+
 /* ── lg-btn: borda cromática + press feedback ─────────────────────── */
 .lg-btn {
   cursor: pointer;
