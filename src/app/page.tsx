@@ -765,7 +765,7 @@ export default function Home() {
   const isDragging = dragStart !== null;
 
   function getModalScale(): number {
-    const SCALE_RESTING = 0.91;
+    const SCALE_RESTING = 0.95;
     if (!isDragging) return modalOpen === "open" ? 1 : SCALE_RESTING;
     const modalH = modalRef.current?.offsetHeight ?? 400;
     const restingVisible = 68;
@@ -781,8 +781,8 @@ export default function Home() {
     }
     switch (modalOpen) {
       case "hidden":  return `translateY(100%) scale(${scale.toFixed(4)})`;
-      case "peek":    return `translateY(calc(100% - 96px)) scale(${scale.toFixed(4)})`;
-      case "resting": return `translateY(calc(100% - 68px)) scale(${scale.toFixed(4)})`;
+      case "peek":    return `translateY(calc(100% - 104px)) scale(${scale.toFixed(4)})`;
+      case "resting": return `translateY(calc(100% - 80px)) scale(${scale.toFixed(4)})`;
       case "mid":     return `translateY(calc(100% - ${restingHeight + hintBump}px)) scale(${scale.toFixed(4)})`;
       case "open":    return `translateY(0%) scale(1)`;
     }
@@ -806,7 +806,7 @@ export default function Home() {
     const visibleNow =
       modalOpen === "open" ? modalH :
       modalOpen === "mid" ? restingHeight :
-      68;
+      80;
     dragBaseRef.current = visibleNow;
     setDragOffset(0);
     setDragStart("touches" in e ? e.touches[0].clientY : (e as React.MouseEvent).clientY);
