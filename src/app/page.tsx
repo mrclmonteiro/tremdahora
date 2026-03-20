@@ -1288,7 +1288,7 @@ export default function Home() {
           ];
           const activeFacilities = facilities.filter(f => f.active);
           return (
-            <aside key={selectedStationCode} className="flex flex-col w-80 overflow-y-auto rounded-2xl" style={{ position: "absolute", left: "calc(100% - 12px + 8px)", top: "12px", bottom: "12px", background: "rgba(245,247,251,0.82)", backdropFilter: "blur(28px) saturate(180%)", WebkitBackdropFilter: "blur(28px) saturate(180%)", border: "1px solid rgba(255,255,255,0.55)", boxShadow: "0 8px 40px rgba(0,0,0,0.13)", transform: stationModalOpen ? "translateX(0) scale(1)" : "translateX(-8px) scale(0.97)", opacity: stationModalOpen ? 1 : 0, transition: "transform 0.35s cubic-bezier(0.32,0.72,0,1), opacity 0.25s ease", pointerEvents: stationModalOpen ? "auto" : "none" }}>
+            <aside key={selectedStationCode} className="flex flex-col w-96 overflow-y-auto rounded-2xl" style={{ position: "absolute", left: "calc(100% - 12px + 8px)", top: "12px", bottom: "12px", background: "rgba(245,247,251,0.82)", backdropFilter: "blur(28px) saturate(180%)", WebkitBackdropFilter: "blur(28px) saturate(180%)", border: "1px solid rgba(255,255,255,0.55)", boxShadow: "0 8px 40px rgba(0,0,0,0.13)", transform: stationModalOpen ? "translateX(0) scale(1)" : "translateX(-8px) scale(0.97)", opacity: stationModalOpen ? 1 : 0, transition: "transform 0.35s cubic-bezier(0.32,0.72,0,1), opacity 0.25s ease", pointerEvents: stationModalOpen ? "auto" : "none" }}>
               <div style={{ padding: "20px 20px 40px" }}>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
                   <h2 style={{ fontSize: 20, fontWeight: 700, color: "#1C1C1E" }}>{st.name}</h2>
