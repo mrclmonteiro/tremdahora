@@ -781,7 +781,7 @@ export default function Home() {
     if (hintTimerRef.current) clearTimeout(hintTimerRef.current);
     // Espera a transição pro mid terminar (450ms) aí sobe 28px e volta
     hintTimerRef.current = setTimeout(() => {
-      setHintBump(28);
+      setHintBump(60);
       hintTimerRef.current = setTimeout(() => setHintBump(0), 500);
     }, 450);
   }
