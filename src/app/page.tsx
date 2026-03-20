@@ -677,18 +677,18 @@ export default function Home() {
   const modalRef = useRef<HTMLDivElement>(null);
   const restingAnchorRef = useRef<HTMLParagraphElement>(null);
   const [restingHeight, setRestingHeight] = useState(180);
-  const [modalOpen, setModalOpen] = useState<"hidden" | "peek" | "open" | "resting" | "mid">("hidden");
-  const [showBounceHint, setShowBounceHint] = useState(false);
+  const [modalOpen, setModalOpen] = useState<"hidden" | "peek" | "resting" | "mid" | "open">("hidden");
+  const [hintBump, setHintBump] = useState(0); // px extra pra cima no hint do mid
   const [dragStart, setDragStart] = useState<number | null>(null);
   const [dragOffset, setDragOffset] = useState(0);
   const dragOffsetRef = useRef(0);
   const dragBaseRef = useRef(0);
+  const hintTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   function openStationModal(code: string) {
     setSelectedStationCode(code);
     setStationDragOffset(0);
     stationDragOffsetRef.current = 0;
-    // Monta o componente em translateY(100%) primeiro, aí anima
     requestAnimationFrame(() => {
       requestAnimationFrame(() => setStationModalOpen(true));
     });
@@ -712,44 +712,39 @@ export default function Home() {
     setStationDragOffset(offset);
   }
   function handleStationDragEnd() {
-    if (stationDragOffsetRef.current > 100) {
-      closeStationModal();
-    } else {
-      setStationDragOffset(0);
-      stationDragOffsetRef.current = 0;
-    }
+    if (stationDragOffsetRef.current > 100) closeStationModal();
+    else { setStationDragOffset(0); stationDragOffsetRef.current = 0; }
     setStationDragStart(null);
   }
 
+  // Intro: peek → resting
   useEffect(() => {
     const t1 = setTimeout(() => setModalOpen("peek"), 400);
     const t2 = setTimeout(() => setModalOpen("resting"), 1600);
     return () => { clearTimeout(t1); clearTimeout(t2); };
   }, []);
 
-  // Mede a altura do conteúdo até "Atualizado às" para o resting state
+  // Mede altura até "Atualizado às" pra saber onde parar no mid
   useEffect(() => {
     function measure() {
       if (!restingAnchorRef.current || !modalRef.current) return;
       const anchorBottom = restingAnchorRef.current.getBoundingClientRect().bottom;
       const modalTop = modalRef.current.getBoundingClientRect().top;
-      const h = anchorBottom - modalTop + 20; // +20 de padding inferior
-      setRestingHeight(h);
+      setRestingHeight(Math.round(anchorBottom - modalTop + 24));
     }
-    // Mede quando o modal aparece e quando o status muda
-    const t = setTimeout(measure, 500);
+    const t = setTimeout(measure, 600);
     return () => clearTimeout(t);
   }, [status, lastUpdate]);
 
+  // Drag global listeners
   useEffect(() => {
     function onMove(e: TouchEvent | MouseEvent) {
       if (dragStart === null) return;
       const clientY = "touches" in e ? e.touches[0].clientY : e.clientY;
       const raw = dragStart - clientY;
       const maxOffset = modalRef.current ? modalRef.current.offsetHeight - 56 : 999;
-      const offset = Math.min(raw, maxOffset);
-    dragOffsetRef.current = offset;
-    setDragOffset(offset);
+      dragOffsetRef.current = Math.min(raw, maxOffset);
+      setDragOffset(dragOffsetRef.current);
     }
     function onEnd() {
       if (dragStart === null) return;
@@ -765,50 +760,68 @@ export default function Home() {
       window.removeEventListener("mousemove", onMove as EventListener);
       window.removeEventListener("mouseup", onEnd);
     };
-  }, [dragStart]);
+  }, [dragStart]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const isDragging = dragStart !== null;
 
+  function getModalTransform(): string {
+    if (isDragging) {
+      return `translateY(calc(100% - ${Math.max(0, dragBaseRef.current + dragOffset)}px))`;
+    }
+    switch (modalOpen) {
+      case "hidden":  return "translateY(100%)";
+      case "peek":    return "translateY(calc(100% - 96px))";
+      case "resting": return "translateY(calc(100% - 68px))";
+      case "mid":     return `translateY(calc(100% - ${restingHeight + hintBump}px))`;
+      case "open":    return "translateY(0%)";
+    }
+  }
+
+  function doHintBounce() {
+    if (hintTimerRef.current) clearTimeout(hintTimerRef.current);
+    // Espera a transição pro mid terminar (450ms) aí sobe 28px e volta
+    hintTimerRef.current = setTimeout(() => {
+      setHintBump(28);
+      hintTimerRef.current = setTimeout(() => setHintBump(0), 500);
+    }, 450);
+  }
+
   function handleModalDragStart(e: React.TouchEvent | React.MouseEvent) {
+    // Cancela hint em andamento se o usuário arrastar
+    if (hintTimerRef.current) { clearTimeout(hintTimerRef.current); hintTimerRef.current = null; }
+    setHintBump(0);
     const modalH = modalRef.current?.offsetHeight ?? 0;
     const windowH = window.innerHeight;
-    // posição atual do topo do modal em px a partir do topo da tela
-    const currentTop = modalOpen === "open" 
-      ? windowH - modalH 
-      : modalOpen === "mid" 
-        ? windowH - restingHeight 
-        : windowH - 56;
-    dragBaseRef.current = windowH - currentTop; // quanto do modal está visível
+    const visibleNow =
+      modalOpen === "open" ? modalH :
+      modalOpen === "mid" ? restingHeight :
+      68;
+    dragBaseRef.current = visibleNow;
     setDragOffset(0);
     setDragStart("touches" in e ? e.touches[0].clientY : (e as React.MouseEvent).clientY);
   }
   function handleModalDragMove(e: React.TouchEvent | React.MouseEvent) {
     if (dragStart === null) return;
     const clientY = "touches" in e ? e.touches[0].clientY : (e as React.MouseEvent).clientY;
-    const offset = dragStart - clientY;
-    dragOffsetRef.current = offset;
-    setDragOffset(offset);
+    dragOffsetRef.current = dragStart - clientY;
+    setDragOffset(dragOffsetRef.current);
   }
   function handleModalDragEnd() {
-    if (dragOffsetRef.current > 50) {
-      if (modalOpen === "mid") {
-        setModalOpen("open");
-      } else if (modalOpen === "open") {
-        setModalOpen("open");
-      } else {
-        // Primeira puxada: vai pra mid e faz bounce de convite pra cima
+    const offset = dragOffsetRef.current;
+    if (offset > 50) {
+      if (modalOpen === "resting" || modalOpen === "peek") {
         setModalOpen("mid");
-        // Bounce: usa animation class em vez de setTimeout pra não bloquear drag
-        setShowBounceHint(true);
-        setTimeout(() => setShowBounceHint(false), 900);
+        doHintBounce();
+      } else {
+        setModalOpen("open");
       }
-    } else if (dragOffsetRef.current < -50) {
-      setModalOpen(modalOpen === "open" ? "mid" : "resting");
+    } else if (offset < -50) {
+      if (modalOpen === "open") setModalOpen("mid");
+      else setModalOpen("resting");
     }
     setDragStart(null);
     setDragOffset(0);
   }
-
   const isClosed = status.situation.toLowerCase().includes("fechado");
   const isStationsClosing = !isClosed && new Date().getHours() >= 23;
 
@@ -1054,19 +1067,9 @@ export default function Home() {
       {/* Bottom modal fixo — hidden no desktop */}
       <div
         ref={modalRef}
-        className={`md:hidden fixed left-0 right-0 bottom-0 z-50 rounded-t-3xl${showBounceHint && !isDragging ? " animate-hint-up" : ""}`}
+        className="md:hidden fixed left-0 right-0 bottom-0 z-50 rounded-t-3xl"
         style={{
-          transform: isDragging
-            ? `translateY(calc(100% - ${dragBaseRef.current + dragOffset}px))`
-            : modalOpen === "hidden"
-              ? "translateY(100%)"
-              : modalOpen === "open"
-                ? "translateY(0%)"
-                : modalOpen === "peek"
-                  ? "translateY(calc(100% - 96px))"
-                  : modalOpen === "mid"
-                    ? `translateY(calc(100% - ${restingHeight}px))`
-                    : "translateY(calc(100% - 68px))",
+          transform: getModalTransform(),
           transition: isDragging ? "none" : "transform 0.45s cubic-bezier(0.32, 0.72, 0, 1)",
           touchAction: "none",
           willChange: "transform",
