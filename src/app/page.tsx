@@ -510,7 +510,7 @@ export default function Home() {
     loadStatus().then(() => fetchHistory());
     const t = window.setInterval(fetchHistory, POLL_MS);
     return () => window.clearInterval(t);
-  }, [fetchHistory, loadStatus]);
+  }, [fetchHistory]); // loadStatus é chamado via .then, não precisa ser dependência
 
 
   useEffect(() => {
