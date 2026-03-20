@@ -506,10 +506,11 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    fetchHistory();
+    // No mount: carrega status primeiro, depois history — evita competição de rede
+    loadStatus().then(() => fetchHistory());
     const t = window.setInterval(fetchHistory, POLL_MS);
     return () => window.clearInterval(t);
-  }, [fetchHistory]);
+  }, [fetchHistory, loadStatus]);
 
 
   useEffect(() => {
@@ -568,7 +569,7 @@ export default function Home() {
   }, [fetchHistory]);
 
   useEffect(() => {
-    loadStatus();
+    // loadStatus inicial já é chamado pelo useEffect do fetchHistory (via .then)
     const timer = window.setInterval(loadStatus, POLL_MS);
     return () => window.clearInterval(timer);
   }, [loadStatus]);
