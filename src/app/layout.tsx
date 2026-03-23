@@ -8,7 +8,7 @@ const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 export const metadata: Metadata = {
   manifest: "/manifest.json",
   title: "Trem da Hora",
-  description: "Acompanhamento de horários e operação da Trensurb em Porto Alegre.",
+  description: "Acompanhe os horários e a operação da Trensurb",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
@@ -85,6 +85,8 @@ export default function RootLayout({
         </svg>
 
         {children}
+
+        <Analytics /> 
 
         <div
           className="md:hidden"

@@ -323,114 +323,6 @@ const TREM_TOUR_STEPS_DESKTOP = [
 const TREM_TOUR_STEPS = TREM_TOUR_STEPS_MOBILE
 type TremTourAnchor = "modal" | "header" | "station" | "sidebar" | "toggle"
 
-// ── Solari flip board component ──────────────────────────────────────────────
-const FLIP_CHARS = "0123456789:";
-
-function FlipChar({ char, prevChar, fontSize, color, delay }: {
-  char: string; prevChar: string; fontSize: number; color: string; delay: number;
-}) {
-  const [flipping, setFlipping] = React.useState(false);
-  const [displayed, setDisplayed] = React.useState(char);
-  const [next, setNext] = React.useState(char);
-  const timerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  React.useEffect(() => {
-    if (char === displayed && !flipping) return;
-    if (timerRef.current) clearTimeout(timerRef.current);
-    timerRef.current = setTimeout(() => {
-      setNext(char);
-      setFlipping(true);
-      timerRef.current = setTimeout(() => {
-        setDisplayed(char);
-        setFlipping(false);
-      }, 160);
-    }, delay);
-    return () => { if (timerRef.current) clearTimeout(timerRef.current); };
-  }, [char]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  const h = fontSize * 1.2;
-  const half = h / 2;
-
-  return (
-    <span style={{ position: "relative", display: "inline-block", width: char === ":" ? fontSize * 0.35 : fontSize * 0.65, height: h, overflow: "visible", verticalAlign: "top" }}>
-      {/* Static bottom half — next value (mostra metade inferior) */}
-      <span style={{
-        position: "absolute", left: 0, right: 0, bottom: 0, height: half,
-        overflow: "hidden",
-        fontVariantNumeric: "tabular-nums",
-      }}>
-        <span style={{ fontSize, fontWeight: 700, color, lineHeight: `${h}px`, display: "block", transform: `translateY(-${half}px)` }}>{next}</span>
-      </span>
-      {/* Static top half — current value (mostra metade superior) */}
-      <span style={{
-        position: "absolute", left: 0, right: 0, top: 0, height: half,
-        overflow: "hidden",
-        fontVariantNumeric: "tabular-nums",
-      }}>
-        <span style={{ fontSize, fontWeight: 700, color, lineHeight: `${h}px`, display: "block", transform: `translateY(0)` }}>{displayed}</span>
-      </span>
-      {/* Animated top flap — gira pra baixo mostrando metade superior do valor atual */}
-      {flipping && (
-        <span style={{
-          position: "absolute", left: 0, right: 0, top: 0, height: half,
-          overflow: "hidden",
-          transformOrigin: "bottom center",
-          perspective: 300,
-          animation: "solari-top 0.16s ease-in forwards",
-          fontVariantNumeric: "tabular-nums",
-          pointerEvents: "none",
-        }}>
-          <span style={{ fontSize, fontWeight: 700, color, lineHeight: `${h}px`, display: "block", transform: `translateY(0)` }}>{displayed}</span>
-        </span>
-      )}
-      {/* Animated bottom flap — gira de cima pra baixo revelando metade inferior do próximo */}
-      {flipping && (
-        <span style={{
-          position: "absolute", left: 0, right: 0, bottom: 0, height: half,
-          overflow: "hidden",
-          transformOrigin: "top center",
-          perspective: 300,
-          animation: "solari-bot 0.16s ease-out 0.08s forwards",
-          fontVariantNumeric: "tabular-nums",
-          pointerEvents: "none",
-        }}>
-          <span style={{ fontSize, fontWeight: 700, color, lineHeight: `${h}px`, display: "block", transform: `translateY(-${half}px)` }}>{next}</span>
-        </span>
-      )}
-    </span>
-  );
-}
-
-function FlipTime({ value, fontSize, color }: { value: string | null; fontSize: number; color: string }) {
-  const [prev, setPrev] = React.useState(value ?? "--:--");
-  const cur = value ?? "--:--";
-
-  React.useEffect(() => {
-    const t = setTimeout(() => setPrev(cur), 400);
-    return () => clearTimeout(t);
-  }, [cur]);
-
-  // Pad to 5 chars (HH:MM)
-  const chars = cur.padStart(5, "0").split("");
-  const prevChars = prev.padStart(5, "0").split("");
-
-  return (
-    <span style={{ display: "inline-flex", alignItems: "baseline", letterSpacing: "-0.02em" }}>
-      {chars.map((ch, i) => (
-        <FlipChar
-          key={i}
-          char={ch}
-          prevChar={prevChars[i] ?? ch}
-          fontSize={fontSize}
-          color={color}
-          delay={i * 40}
-        />
-      ))}
-    </span>
-  );
-}
-// ─────────────────────────────────────────────────────────────────────────────
-
 function TremTour({
   step, onAdvance, modalRef, headerRef, stationRef, sidebarRef, toggleRef,
 }: {
@@ -632,17 +524,29 @@ export default function Home() {
     try {
       const res = await fetch("/api/headway-history");
       const raw = await res.json() as { recorded_at: string; headway_nh: number; headway_mr: number }[];
-      const periods: HeadwayPeriod[] = raw.map(r => ({
+
+      // A API retorna desc (mais recente primeiro). Ordena ASC antes de processar.
+      const sorted = [...raw].sort((a, b) =>
+        new Date(a.recorded_at).getTime() - new Date(b.recorded_at).getTime()
+      );
+
+      const periods: HeadwayPeriod[] = sorted.map(r => ({
         startMinutes: (() => {
           const d = new Date(r.recorded_at);
-          return d.getHours() * 60 + d.getMinutes() + d.getSeconds() / 60;
+          return d.getHours() * 60 + d.getMinutes(); // sem segundos — evita drift acumulado
         })(),
         headwayNH: r.headway_nh,
         headwayMR: r.headway_mr,
       }));
-      // Garante período desde o início do serviço com o headway mais antigo conhecido
+
+      // Prepend com o headway MAIS ANTIGO (sorted[0]) desde o início do serviço.
+      // Isso garante que trens que saíram antes da primeira mudança registrada usam o headway correto.
       if (periods.length > 0) {
-        periods.unshift({ startMinutes: SERVICE_START_MINUTES, headwayNH: periods[0].headwayNH, headwayMR: periods[0].headwayMR });
+        periods.unshift({
+          startMinutes: SERVICE_START_MINUTES,
+          headwayNH: periods[0].headwayNH,
+          headwayMR: periods[0].headwayMR,
+        });
       }
       setHeadwayPeriods(periods);
     } catch {}
@@ -838,8 +742,7 @@ export default function Home() {
       if (!restingAnchorRef.current || !modalRef.current) return;
       const anchorBottom = restingAnchorRef.current.getBoundingClientRect().bottom;
       const modalTop = modalRef.current.getBoundingClientRect().top;
-      // Divide pela escala pra compensar o transform: o modal está em scale(0.95) quando medido
-      setRestingHeight(Math.round((anchorBottom - modalTop + 32) / 0.95));
+      setRestingHeight(Math.round(anchorBottom - modalTop + 24));
     }
     const t = setTimeout(measure, 600);
     return () => clearTimeout(t);
@@ -901,7 +804,7 @@ export default function Home() {
     if (hintTimerRef.current) clearTimeout(hintTimerRef.current);
     // Espera a transição pro mid terminar (450ms) aí sobe 28px e volta
     hintTimerRef.current = setTimeout(() => {
-      setHintBump(72);
+      setHintBump(28);
       hintTimerRef.current = setTimeout(() => setHintBump(0), 500);
     }, 450);
   }
@@ -1505,18 +1408,9 @@ export default function Home() {
                       return (
                         <div key={dir} style={{ background: "rgba(60,60,67,0.06)", borderRadius: 16, padding: "14px 14px 12px" }}>
                           <span style={{ display: "inline-block", fontSize: 9, fontWeight: 800, letterSpacing: "0.08em", textTransform: "uppercase", color: "white", background: color, borderRadius: 6, padding: "2px 6px", marginBottom: 10 }}>{label}</span>
-                          {t.last && <div style={{ marginBottom: 6 }}><p style={{ fontSize: 9, color: "rgba(60,60,67,0.4)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 1 }}>Último</p><FlipTime value={t.last} fontSize={18} color="rgba(60,60,67,0.4)" /></div>}
-                          {t.next1 && <div style={{ marginBottom: 4 }}><p style={{ fontSize: 9, color: "rgba(60,60,67,0.45)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 1 }}>Próximo</p><div style={{ display: "flex", alignItems: "center", gap: 7 }}><FlipTime value={t.next1} fontSize={22} color="#1C1C1E" />{t.next1Arriving && (<span style={{ display: "inline-flex", alignItems: "center", gap: 4, animation: "trem-chegando 0.55s steps(1) infinite", flexShrink: 0 }}>
-                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#FF3B30" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                        <rect x="4" y="3" width="16" height="13" rx="3"/>
-                        <path d="M4 10h16"/>
-                        <path d="M8 3v7M16 3v7"/>
-                        <path d="M7 19l-2 2M17 19l2 2"/>
-                        <path d="M9 19h6"/>
-                      </svg>
-                      <span style={{ fontSize: 9, fontWeight: 800, color: "#FF3B30", letterSpacing: "0.08em" }}>AGORA</span>
-                    </span>)}</div></div>}
-                          {t.next2 && <div><p style={{ fontSize: 9, color: "rgba(60,60,67,0.45)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 1 }}>Seguinte</p><FlipTime value={t.next2} fontSize={16} color="rgba(60,60,67,0.55)" /></div>}
+                          {t.last && <div style={{ marginBottom: 6 }}><p style={{ fontSize: 9, color: "rgba(60,60,67,0.4)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 1 }}>Último</p><p style={{ fontSize: 18, fontWeight: 700, color: "rgba(60,60,67,0.4)", lineHeight: 1 }}>{t.last}</p></div>}
+                          {t.next1 && <div style={{ marginBottom: 4 }}><p style={{ fontSize: 9, color: "rgba(60,60,67,0.45)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 1 }}>Próximo</p><div style={{ display: "flex", alignItems: "center", gap: 7 }}><p style={{ fontSize: 22, fontWeight: 700, color: "#1C1C1E", lineHeight: 1 }}>{t.next1}</p>{t.next1Arriving && (<span style={{ position: "relative", display: "inline-flex", width: 10, height: 10, flexShrink: 0 }}><span style={{ position: "absolute", inset: 0, borderRadius: "50%", backgroundColor: "#FF3B30", opacity: 0.5, animation: "ping 1.5s cubic-bezier(0,0,0.2,1) infinite" }} /><span style={{ position: "relative", display: "inline-block", width: 10, height: 10, borderRadius: "50%", backgroundColor: "#FF3B30", boxShadow: "0 0 6px rgba(255,59,48,0.6)" }} /></span>)}</div></div>}
+                          {t.next2 && <div><p style={{ fontSize: 9, color: "rgba(60,60,67,0.45)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 1 }}>Seguinte</p><p style={{ fontSize: 16, fontWeight: 600, color: "rgba(60,60,67,0.55)", lineHeight: 1 }}>{t.next2}</p></div>}
                           {!t.next1 && <p style={{ fontSize: 12, color: "rgba(60,60,67,0.3)" }}>Sem previsão</p>}
                         </div>
                       );
@@ -1649,24 +1543,20 @@ export default function Home() {
                     return (
                       <div key={dir} style={{ background: "rgba(60,60,67,0.06)", borderRadius: 16, padding: "14px 14px 12px" }}>
                         <span style={{ display: "inline-block", fontSize: 9, fontWeight: 800, letterSpacing: "0.08em", textTransform: "uppercase", color: "white", background: color, borderRadius: 6, padding: "2px 6px", marginBottom: 10 }}>{label}</span>
-                        {t.last && <div style={{ marginBottom: 6 }}><p style={{ fontSize: 9, color: "rgba(60,60,67,0.4)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 1 }}>Último</p><FlipTime value={t.last} fontSize={18} color="rgba(60,60,67,0.4)" /></div>}
+                        {t.last && <div style={{ marginBottom: 6 }}><p style={{ fontSize: 9, color: "rgba(60,60,67,0.4)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 1 }}>Último</p><p style={{ fontSize: 18, fontWeight: 700, color: "rgba(60,60,67,0.4)", lineHeight: 1 }}>{t.last}</p></div>}
                         {t.next1 && <div style={{ marginBottom: 4 }}>
   <p style={{ fontSize: 9, color: "rgba(60,60,67,0.45)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 1 }}>Próximo</p>
   <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
-    <FlipTime value={t.next1} fontSize={22} color="#1C1C1E" />
-    {t.next1Arriving && (<span style={{ display: "inline-flex", alignItems: "center", gap: 4, animation: "trem-chegando 0.55s steps(1) infinite", flexShrink: 0 }}>
-                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#FF3B30" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                        <rect x="4" y="3" width="16" height="13" rx="3"/>
-                        <path d="M4 10h16"/>
-                        <path d="M8 3v7M16 3v7"/>
-                        <path d="M7 19l-2 2M17 19l2 2"/>
-                        <path d="M9 19h6"/>
-                      </svg>
-                      <span style={{ fontSize: 9, fontWeight: 800, color: "#FF3B30", letterSpacing: "0.08em" }}>AGORA</span>
-                    </span>)}
+    <p style={{ fontSize: 22, fontWeight: 700, color: "#1C1C1E", lineHeight: 1 }}>{t.next1}</p>
+    {t.next1Arriving && (
+      <span style={{ position: "relative", display: "inline-flex", width: 10, height: 10, flexShrink: 0 }}>
+        <span style={{ position: "absolute", inset: 0, borderRadius: "50%", backgroundColor: "#FF3B30", opacity: 0.5, animation: "ping 1.5s cubic-bezier(0,0,0.2,1) infinite" }} />
+        <span style={{ position: "relative", display: "inline-block", width: 10, height: 10, borderRadius: "50%", backgroundColor: "#FF3B30", boxShadow: "0 0 6px rgba(255,59,48,0.6)" }} />
+      </span>
+    )}
   </div>
 </div>}
-                        {t.next2 && <div><p style={{ fontSize: 9, color: "rgba(60,60,67,0.45)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 1 }}>Seguinte</p><FlipTime value={t.next2} fontSize={16} color="rgba(60,60,67,0.55)" /></div>}
+                        {t.next2 && <div><p style={{ fontSize: 9, color: "rgba(60,60,67,0.45)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 1 }}>Seguinte</p><p style={{ fontSize: 16, fontWeight: 600, color: "rgba(60,60,67,0.55)", lineHeight: 1 }}>{t.next2}</p></div>}
                         {!t.next1 && <p style={{ fontSize: 12, color: "rgba(60,60,67,0.3)" }}>Sem previsão</p>}
                       </div>
                     );
