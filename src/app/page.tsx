@@ -97,8 +97,8 @@ type CitySection = {
 };
 
 const CITY_SECTIONS: CitySection[] = [
-  { city: "Novo Hamburgo", codes: ["NH", "FN", "IN"] },
-  { city: "São Leopoldo", codes: ["SF", "RS", "SO", "UN"] },
+  { city: "Novo Hamburgo", codes: ["NH", "FN", "IN", "SF"] },
+  { city: "São Leopoldo", codes: ["RS", "SO", "UN"] },
   { city: "Sapucaia do Sul", codes: ["SC", "LP"], labelLines: ["Sapucaia", "do Sul"] },
   { city: "Esteio", codes: ["ES"], paddingY: 8 },
   { city: "Canoas", codes: ["PB", "SL", "MV", "CN", "FT", "NT"] },
@@ -274,8 +274,8 @@ function getStationTrainTimes(
     const future = arrivals.filter(t => t > minutesNow);
     const lastPast = past.length > 0 ? past[past.length - 1] : null;
     const soonest = future.length > 0 ? future[0] : null;
-    const justPassed = lastPast !== null && minutesNow - lastPast <= 2;
-    const aboutToArrive = soonest !== null && soonest - minutesNow <= 1;
+    const justPassed = lastPast !== null && minutesNow - lastPast <= 0.5;   // 30s após o horário previsto
+    const aboutToArrive = soonest !== null && soonest - minutesNow <= 0.5; // 30s antes do horário previsto
     if (justPassed && !aboutToArrive) {
       return {
         last: past.length > 1 ? minutesToHHMM(past[past.length - 2]) : null,
@@ -310,17 +310,32 @@ function getStationTrainTimes(
 }
 
 
-// ── Solari flip board ─────────────────────────────────────────────────────────
-function FlipChar({ char, fontSize, color, delay }: {
-  char: string; fontSize: number; color: string; delay: number;
+const TREM_TOUR_STEPS_MOBILE = [
+  { msg: "Arraste para cima para conferir o status e os intervalos de partidas entre trens", anchor: "modal" as const },
+  { msg: "Escolha entre a visualização dos terminais Mercado e Novo Hamburgo", anchor: "header" as const },
+  { msg: "Toque em uma estação para conferir os próximos horários previstos", anchor: "station" as const },
+]
+const TREM_TOUR_STEPS_DESKTOP = [
+  { msg: "Aqui você acompanha o status da operação e os intervalos entre trens em tempo real", anchor: "sidebar" as const },
+  { msg: "Alterne entre a perspectiva do Mercado e de Novo Hamburgo com esse toggle", anchor: "toggle" as const },
+  { msg: "Clique em uma estação para ver os próximos horários previstos", anchor: "station" as const },
+]
+const TREM_TOUR_STEPS = TREM_TOUR_STEPS_MOBILE
+type TremTourAnchor = "modal" | "header" | "station" | "sidebar" | "toggle"
+
+// ── Solari flip board component ──────────────────────────────────────────────
+const FLIP_CHARS = "0123456789:";
+
+function FlipChar({ char, prevChar, fontSize, color, delay }: {
+  char: string; prevChar: string; fontSize: number; color: string; delay: number;
 }) {
+  const [flipping, setFlipping] = React.useState(false);
   const [displayed, setDisplayed] = React.useState(char);
   const [next, setNext] = React.useState(char);
-  const [flipping, setFlipping] = React.useState(false);
   const timerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
 
   React.useEffect(() => {
-    if (char === displayed) return;
+    if (char === displayed && !flipping) return;
     if (timerRef.current) clearTimeout(timerRef.current);
     timerRef.current = setTimeout(() => {
       setNext(char);
@@ -335,27 +350,50 @@ function FlipChar({ char, fontSize, color, delay }: {
 
   const h = fontSize * 1.2;
   const half = h / 2;
-  const w = char === ":" ? fontSize * 0.35 : fontSize * 0.62;
 
   return (
-    <span style={{ position: "relative", display: "inline-block", width: w, height: h, overflow: "visible", verticalAlign: "top" }}>
-      {/* Metade inferior estática — próximo valor */}
-      <span style={{ position: "absolute", left: 0, right: 0, bottom: 0, height: half, overflow: "hidden", fontVariantNumeric: "tabular-nums" }}>
+    <span style={{ position: "relative", display: "inline-block", width: char === ":" ? fontSize * 0.35 : fontSize * 0.65, height: h, overflow: "visible", verticalAlign: "top" }}>
+      {/* Static bottom half — next value (mostra metade inferior) */}
+      <span style={{
+        position: "absolute", left: 0, right: 0, bottom: 0, height: half,
+        overflow: "hidden",
+        fontVariantNumeric: "tabular-nums",
+      }}>
         <span style={{ fontSize, fontWeight: 700, color, lineHeight: `${h}px`, display: "block", transform: `translateY(-${half}px)` }}>{next}</span>
       </span>
-      {/* Metade superior estática — valor atual */}
-      <span style={{ position: "absolute", left: 0, right: 0, top: 0, height: half, overflow: "hidden", fontVariantNumeric: "tabular-nums" }}>
-        <span style={{ fontSize, fontWeight: 700, color, lineHeight: `${h}px`, display: "block" }}>{displayed}</span>
+      {/* Static top half — current value (mostra metade superior) */}
+      <span style={{
+        position: "absolute", left: 0, right: 0, top: 0, height: half,
+        overflow: "hidden",
+        fontVariantNumeric: "tabular-nums",
+      }}>
+        <span style={{ fontSize, fontWeight: 700, color, lineHeight: `${h}px`, display: "block", transform: `translateY(0)` }}>{displayed}</span>
       </span>
-      {/* Flap superior animado */}
+      {/* Animated top flap — gira pra baixo mostrando metade superior do valor atual */}
       {flipping && (
-        <span style={{ position: "absolute", left: 0, right: 0, top: 0, height: half, overflow: "hidden", transformOrigin: "bottom center", perspective: 300, animation: "solari-top 0.16s ease-in forwards", fontVariantNumeric: "tabular-nums", pointerEvents: "none" }}>
-          <span style={{ fontSize, fontWeight: 700, color, lineHeight: `${h}px`, display: "block" }}>{displayed}</span>
+        <span style={{
+          position: "absolute", left: 0, right: 0, top: 0, height: half,
+          overflow: "hidden",
+          transformOrigin: "bottom center",
+          perspective: 300,
+          animation: "solari-top 0.16s ease-in forwards",
+          fontVariantNumeric: "tabular-nums",
+          pointerEvents: "none",
+        }}>
+          <span style={{ fontSize, fontWeight: 700, color, lineHeight: `${h}px`, display: "block", transform: `translateY(0)` }}>{displayed}</span>
         </span>
       )}
-      {/* Flap inferior animado */}
+      {/* Animated bottom flap — gira de cima pra baixo revelando metade inferior do próximo */}
       {flipping && (
-        <span style={{ position: "absolute", left: 0, right: 0, bottom: 0, height: half, overflow: "hidden", transformOrigin: "top center", perspective: 300, animation: "solari-bot 0.16s ease-out 0.08s forwards", fontVariantNumeric: "tabular-nums", pointerEvents: "none" }}>
+        <span style={{
+          position: "absolute", left: 0, right: 0, bottom: 0, height: half,
+          overflow: "hidden",
+          transformOrigin: "top center",
+          perspective: 300,
+          animation: "solari-bot 0.16s ease-out 0.08s forwards",
+          fontVariantNumeric: "tabular-nums",
+          pointerEvents: "none",
+        }}>
           <span style={{ fontSize, fontWeight: 700, color, lineHeight: `${h}px`, display: "block", transform: `translateY(-${half}px)` }}>{next}</span>
         </span>
       )}
@@ -364,29 +402,34 @@ function FlipChar({ char, fontSize, color, delay }: {
 }
 
 function FlipTime({ value, fontSize, color }: { value: string | null; fontSize: number; color: string }) {
-  const cur = (value ?? "--:--").padStart(5, "0");
+  const [prev, setPrev] = React.useState(value ?? "--:--");
+  const cur = value ?? "--:--";
+
+  React.useEffect(() => {
+    const t = setTimeout(() => setPrev(cur), 400);
+    return () => clearTimeout(t);
+  }, [cur]);
+
+  // Pad to 5 chars (HH:MM)
+  const chars = cur.padStart(5, "0").split("");
+  const prevChars = prev.padStart(5, "0").split("");
+
   return (
     <span style={{ display: "inline-flex", alignItems: "baseline", letterSpacing: "-0.02em" }}>
-      {cur.split("").map((ch, i) => (
-        <FlipChar key={i} char={ch} fontSize={fontSize} color={color} delay={i * 40} />
+      {chars.map((ch, i) => (
+        <FlipChar
+          key={i}
+          char={ch}
+          prevChar={prevChars[i] ?? ch}
+          fontSize={fontSize}
+          color={color}
+          delay={i * 40}
+        />
       ))}
     </span>
   );
 }
-// ──────────────────────────────────────────────────────────────────────────────
-
-const TREM_TOUR_STEPS_MOBILE = [
-  { msg: "Arraste para cima para conferir o status e os intervalos de partidas entre trens", anchor: "modal" as const },
-  { msg: "Escolha entre a visualização dos terminais Mercado e Novo Hamburgo", anchor: "header" as const },
-  { msg: "Toque em uma estação para conferir os próximos horários previstos", anchor: "station" as const },
-]
-const TREM_TOUR_STEPS_DESKTOP = [
-  { msg: "Aqui você acompanha o status da operação e os intervalos entre trens em tempo real", anchor: "sidebar" as const },
-  { msg: "Alterne entre a perspectiva do Mercado e de Novo Hamburgo com esse toggle", anchor: "toggle" as const },
-  { msg: "Clique em uma estação para ver os próximos horários previstos", anchor: "station" as const },
-]
-const TREM_TOUR_STEPS = TREM_TOUR_STEPS_MOBILE
-type TremTourAnchor = "modal" | "header" | "station" | "sidebar" | "toggle"
+// ─────────────────────────────────────────────────────────────────────────────
 
 function TremTour({
   step, onAdvance, modalRef, headerRef, stationRef, sidebarRef, toggleRef,
@@ -590,24 +633,32 @@ export default function Home() {
       const res = await fetch("/api/headway-history");
       const raw = await res.json() as { recorded_at: string; headway_nh: number; headway_mr: number }[];
 
-      // API retorna DESC (mais recente primeiro). Ordena ASC para que periods[0] seja o mais antigo.
-      // Isso garante que o período inicial (desde o início do serviço) use o headway correto,
-      // e que trens que já saíram não mudem de slot quando o headway muda depois.
-      const sorted = [...raw].sort((a, b) =>
-        new Date(a.recorded_at).getTime() - new Date(b.recorded_at).getTime()
+      // Ordena ASC (mais antigo primeiro) — a API retorna DESC.
+      // Essencial para que periods[0] seja o headway mais antigo do dia,
+      // garantindo que trens que saíram cedo não mudem de slot quando o headway muda.
+      const sortedRaw = [...raw].sort(
+        (a, b) => new Date(a.recorded_at).getTime() - new Date(b.recorded_at).getTime()
       );
 
-      const periods: HeadwayPeriod[] = sorted.map(r => ({
+      const periods: HeadwayPeriod[] = sortedRaw.map(r => ({
         startMinutes: (() => {
           const d = new Date(r.recorded_at);
-          return d.getHours() * 60 + d.getMinutes(); // sem segundos — evita drift acumulado
+          // Sem segundos: evita drift fracionário acumulado ao longo de dezenas de slots
+          return d.getHours() * 60 + d.getMinutes();
         })(),
         headwayNH: r.headway_nh,
         headwayMR: r.headway_mr,
       }));
 
-      if (periods.length > 0) {
-        periods.unshift({ startMinutes: SERVICE_START_MINUTES, headwayNH: periods[0].headwayNH, headwayMR: periods[0].headwayMR });
+      // Só adiciona período inicial se o primeiro registro não é já desde o início do serviço.
+      // O backend garante que existe um registro às 5h — se não houver, usamos o headway
+      // mais antigo conhecido como aproximação.
+      if (periods.length > 0 && periods[0].startMinutes > SERVICE_START_MINUTES) {
+        periods.unshift({
+          startMinutes: SERVICE_START_MINUTES,
+          headwayNH: periods[0].headwayNH,
+          headwayMR: periods[0].headwayMR,
+        });
       }
       setHeadwayPeriods(periods);
     } catch {}
@@ -803,7 +854,8 @@ export default function Home() {
       if (!restingAnchorRef.current || !modalRef.current) return;
       const anchorBottom = restingAnchorRef.current.getBoundingClientRect().bottom;
       const modalTop = modalRef.current.getBoundingClientRect().top;
-      setRestingHeight(Math.round(anchorBottom - modalTop + 24));
+      // Divide pela escala pra compensar o transform: o modal está em scale(0.95) quando medido
+      setRestingHeight(Math.round((anchorBottom - modalTop + 32) / 0.95));
     }
     const t = setTimeout(measure, 600);
     return () => clearTimeout(t);
@@ -865,7 +917,7 @@ export default function Home() {
     if (hintTimerRef.current) clearTimeout(hintTimerRef.current);
     // Espera a transição pro mid terminar (450ms) aí sobe 28px e volta
     hintTimerRef.current = setTimeout(() => {
-      setHintBump(28);
+      setHintBump(72);
       hintTimerRef.current = setTimeout(() => setHintBump(0), 500);
     }, 450);
   }

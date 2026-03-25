@@ -8,12 +8,16 @@ const supabase = createClient(
 
 export async function GET() {
   const since = new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString();
+
   const { data, error } = await supabase
     .from("headway_history")
     .select("recorded_at, headway_nh, headway_mr")
     .gte("recorded_at", since)
-    .order("recorded_at", { ascending: true });
+    .order("recorded_at", { ascending: false });
 
-  if (error) return NextResponse.json([], { status: 500 });
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+
   return NextResponse.json(data ?? []);
 }
